@@ -53,3 +53,163 @@ quest necropolis_water_pump
     done   GVAR_NECROP_WATER_PUMP_FIXED >= 2
     note   Repair roll -5; a critical failure destroys the parts
     src    NH2OPUMP.ssl:79
+
+# New quests (batch A): Scrapheap demo, Necropolis motorcycle, Necropolis prisoner, Iguana Bob
+#
+# ---------------------------------------------------------------------------------------------
+# Scrapheap = the Fallout 1 demo, playable inside Fo1in2. MAP_SCRAPHEAP (75, file JUNKDEMO.MAP,
+# AREA_SCRAPHEAP 60). It is NOT reachable from the world map: CITY.TXT [Area 60] has
+# start_state=Off, and HOTELMAP.ssl:40 calls invisible_on_map(AREA_SCRAPHEAP) when you come back.
+# The only way in is the broken terminal in the Necropolis motel (HOTEL:1, DEADCOMP.ssl):
+# repair it (Repair skill, DEADCOMP.ssl:81), then use it -> load_map(MAP_SCRAPHEAP) (:106).
+# Enabled by default: GVAR_ENABLE_SCRAPHEAP := 1 in Vault13.gam (the ini switch is commented out,
+# gl_0_settings.ssl:107 "Demo is always enabled"). Once finished (GVAR_QUEST_DEMO_GANG_WAR == 69,
+# fo1.h:160) the terminal refuses to start it again.
+# Your inventory is swapped for a demo kit on entry and given back on exit (JUNKDEMO.ssl).
+# GVAR_QUEST_DEMO_GANG_WAR: 0, 1 = gang war started (Rayze RAYZE.ssl:231/237 or Baka BAKA.ssl:382
+# after you scouted the other gang), 2 = generator sabotaged and the gangs walk off
+# (DEMOFOOL.ssl:150 etc.), 69 = demo completed (JUNKDEMO.ssl:166, slideshow, back to the motel).
+# The demo ends ~10 s after either MVAR_Broken_Gen (2) is set or both gang counters (MVAR 8 Fools,
+# start 4; MVAR 9 Crypts, start 8) drop to <= 1 (JUNKDEMO.ssl:109-115).
+# GVAR_QUEST_DEMO_FIX_POWER is not a quest: Lex/peasants set it after the sabotage (LEX.ssl:192,
+# PEZ.ssl:124) and ask you to repair the generator, but the demo is already ending and the repair
+# only prints text (DEMOGEN.ssl EVENT_ENDGAME is a debug stub).
+# MAP_SCRAPHEAP mvars (maps/junkdemo.h): 0 Is_Fool, 1 Is_Crypt, 2 Broken_Gen, 18 CurHP (set to the
+# player's HP on the first visit, so >= 1 means "entered the demo").
+# NPCs on SCRAPHEAP:0 (map script table): Lex 22103, Rock 25908 (by the gate), Skizzer 25903,
+# Rayze 18694, Phrax 19304, Baka 13306, Skippy 13508, generator (scenery 33554482) 20902.
+# Motel terminal: HOTEL:1 tile 25322, scenery 33554836.
+quest scrapheap_gangs
+  name   Rid Scrapheap of the gangs
+  town   Necropolis
+  kind   optional
+  giver  Lex in Scrapheap (motel terminal)
+  unlock GVAR_ENABLE_SCRAPHEAP >= 1
+  lockhint Scrapheap demo is disabled
+  order  30
+  active mvar MAP_SCRAPHEAP 18 >= 1 | GVAR_QUEST_DEMO_GANG_WAR >= 1
+  done   GVAR_QUEST_DEMO_GANG_WAR == 69
+
+  step Repair and use the motel's old terminal
+    where  HOTEL:1
+    target scenery 33554836
+    done   mvar MAP_SCRAPHEAP 18 >= 1 | GVAR_QUEST_DEMO_GANG_WAR >= 1
+    note   Repair skill fixes it; using it then takes you to Scrapheap
+    src    DEADCOMP.ssl:81
+
+  step Join the Crypts or the Fools
+    where  SCRAPHEAP:0
+    target npc SCRIPT_RAYZE,SCRIPT_BAKA
+    done   mvar MAP_SCRAPHEAP 0 >= 1 | mvar MAP_SCRAPHEAP 1 >= 1 | GVAR_QUEST_DEMO_GANG_WAR >= 1
+    note   Rock sends you to Rayze (Crypts); Baka (Fools) wants a good joke
+    src    RAYZE.ssl:171
+
+  step Scout the rival gang and report back
+    where  SCRAPHEAP:0
+    target npc SCRIPT_RAYZE,SCRIPT_BAKA
+    done   GVAR_QUEST_DEMO_GANG_WAR >= 1
+    note   Your gang leader then starts the war; Lex will fight at your side
+    src    BAKA.ssl:382
+
+  step Wipe out the Crypts and the Fools
+    where  SCRAPHEAP:0
+    done   GVAR_QUEST_DEMO_GANG_WAR == 69
+    note   Demo ends when at most one Crypt and one Fool are left
+    src    JUNKDEMO.ssl:166
+
+  step Sabotage the power generator
+    alt
+    where  SCRAPHEAP:0
+    target scenery 33554482
+    done   mvar MAP_SCRAPHEAP 2 >= 1 | GVAR_QUEST_DEMO_GANG_WAR == 2
+    note   Use Skippy's cutters (multi-tool; ask or steal) on it; gangs leave
+    src    DEMOGEN.ssl:85
+
+
+# ---------------------------------------------------------------------------------------------
+# Griffith's motorcycle (Fo1in2 addition). Only exists if GVAR_ENABLE_MOTORCYCLE (fo1_settings.ini
+# GVAR_ENABLE_MOTORCYCLE, read by gl_0_settings.ssl:73); otherwise griffith.ssl destroys Griffith
+# and WATRSHED.ssl:42 never creates the bike. NOTE: this install has GVAR_ENABLE_MOTORCYCLE=0.
+# Bike: WATRSHD:1 hex 19095 (CAR_UNCLAIMED_HEX), empty tank. Griffith: WATRSHD:1 tile 19495,
+# carries the key (PID_MOTO_KEY).
+# Griffith asks you to watch his bike while he goes into the sewers (Node1700): sets
+# GVAR_GRIFFITH_HAS_KEY = 1 if he still has the key (griffith.ssl:316), picks a random sewer spot
+# (GVAR_SEWER_KING_POS: WATRSHD/HOTEL/HALLDED elevation 0) and vanishes for 2-4 h
+# (GVAR_GRIFFITH_STATE = 1, griffith.ssl:146). Entering that map spawns his body (killed on elev 0)
+# with the key and the Sewer King (albino mole rat) (area/necropolis.h:96-131).
+# Alternatives: pickpocket the key or kill him (destroy_p_proc sets GRIFFITH_STATE 1, :210).
+# Using the bike without owning it: GVAR_QUEST_MOTORCYCLE 1 -> Griffith confronts you (2, :215)
+# -> again: 3 = he attacks. Key used on/with the bike: GVAR_PLAYER_GOT_CAR = 1 (MOTRCYCL.ssl:84/131).
+# First ride with fuel: GVAR_QUEST_MOTORCYCLE >= 20 (MOTRCYCL.ssl:111, necropolis.h:59).
+quest necropolis_motorcycle
+  name   Griffith's motorcycle
+  town   Necropolis
+  kind   optional
+  giver  Griffith, by the bike at the Watershed
+  unlock GVAR_ENABLE_MOTORCYCLE >= 1
+  lockhint Motorcycle is off in fo1_settings.ini
+  order  40
+  active GVAR_GRIFFITH_STATE >= 1 | GVAR_QUEST_MOTORCYCLE >= 1 | GVAR_PLAYER_GOT_CAR >= 1 | item PID_MOTO_KEY
+  done   GVAR_QUEST_MOTORCYCLE >= 20
+
+  step Agree to watch Griffith's motorcycle
+    where  WATRSHD:1
+    target npc SCRIPT_GRIFFITH
+    done   GVAR_GRIFFITH_STATE >= 1 | GVAR_PLAYER_GOT_CAR >= 1 | item PID_MOTO_KEY
+    note   He leaves for the sewers and does not come back
+    src    griffith.ssl:146
+
+  step Find Griffith's body in the sewers
+    show   GVAR_GRIFFITH_HAS_KEY == 1
+    where  WATRSHD:0,HOTEL:0,HALLDED:0
+    target item PID_MOTO_KEY
+    done   item PID_MOTO_KEY | GVAR_PLAYER_GOT_CAR >= 1
+    note   The Sewer King got him; the bike key is on his body
+    src    necropolis.h:110
+
+  step Take the key from Griffith
+    alt
+    show   GVAR_GRIFFITH_HAS_KEY == 0
+    where  WATRSHD:1
+    target npc SCRIPT_GRIFFITH
+    done   item PID_MOTO_KEY | GVAR_PLAYER_GOT_CAR >= 1
+    note   Pickpocket it or kill him; he attacks if he sees you with it
+    src    griffith.ssl:210
+
+  step Use the key on the motorcycle
+    where  WATRSHD:1
+    target tile 19095:1
+    done   GVAR_PLAYER_GOT_CAR >= 1
+    src    MOTRCYCL.ssl:84
+
+  step Fuel it up and ride away
+    where  WATRSHD:1
+    target tile 19095:1
+    done   GVAR_QUEST_MOTORCYCLE >= 20
+    note   Use small energy or micro fusion cells on the bike, then use it
+    src    MOTRCYCL.ssl:111
+
+
+# ---------------------------------------------------------------------------------------------
+# Ghoul prisoner of the super mutants (Watershed cells), FO1 Pip-Boy entry 602 (commented out in
+# quests.txt). He asks to be let out (PRISONR.ssl:159). The cell door (SCRIPT_GDOOR, scenery
+# 33555077, WATRSHD:1 tile 15476) is locked: lockpick it or blow it up; opening it sets
+# WATRSHD mvar 6 MVAR_GHOUL_DOOR_OPEN (GDOOR.ssl:44/127). Talking to him afterwards gives the XP
+# (PRISONR.ssl:197, local var only) and he walks off. Prisoner: WATRSHD:1 tile 16076.
+# The talk itself is not trackable, so the door is the done condition.
+quest necropolis_prisoner
+  name   Free the ghoul prisoner
+  town   Necropolis
+  kind   optional
+  giver  Ghoul prisoner in the Watershed cells
+  order  50
+  active map MAP_WATRSHD | mvar MAP_WATRSHD 6 >= 1
+  # active stays on after leaving the Watershed (quests stay active once seen active)
+  done   mvar MAP_WATRSHD 6 >= 1
+
+  step Open the prisoner's cell door
+    where  WATRSHD:1
+    target scenery 33555077
+    done   mvar MAP_WATRSHD 6 >= 1
+    note   Lockpick it or use explosives; then talk to him for the XP
+    src    GDOOR.ssl:44

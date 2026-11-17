@@ -1,0 +1,30 @@
+# GVARs that tools/coverage.py should not report: checked in the Fo1in2 sources, not player tasks
+# (or already covered through another GVAR). One per line, reason after #.
+GVAR_GARRET_STATUS            # death flag
+GVAR_SIGNAL_REWARD            # reward bits for Watershed mutants / Cathedral (existing quests)
+GVAR_NECROP_WATER_PUMP_GUARD  # branch of necropolis_water_pump (Garret escort)
+GVAR_SHERRY_TURNS             # Sherry leaves the Skulz after a talk; no giver or reward
+GVAR_JEREMIAH_STATUS          # death flag
+GVAR_JEREMIAH_TRICKED         # disguise bluff in dialogue
+GVAR_SETH_STATUS              # met/dead flag
+GVAR_ARADESH_STATUS           # met/dead flag
+GVAR_GARLS_FRIEND             # befriending the Khans in dialogue (XP), not a task
+GVAR_MISTAKEN_ID              # raiders think you are Garl's father (random)
+GVAR_QUEST_DEMO_FIX_POWER     # Scrapheap demo ends before it can be done
+GVAR_FOLLOWER_MACHO_HELP      # part of cathedral_contact_laura
+GVAR_DAN_HUB_STATUS           # Dan dead; nobody asks for it
+GVAR_UNDERGROUND_STATUS       # police raid, covered by hub_decker
+GVAR_PC_WANTED                # wanted state
+GVAR_RAIDERS_LEFT_IRWIN       # counter inside hub_irwin_farm
+GVAR_ARTIFACT_DISK_FOUND_GIVEN  # part of bos_become_initiate
+GVAR_RHOMBUS_STATUS           # death flag
+GVAR_VREE_GIVEN_DUDE_AUTOPSY  # information handed over, not a task
+GVAR_BROTHERHOOD_WEEKLY_AMMO  # weekly ammo from Talus
+GVAR_GUN_RUNNERS_BONUS        # a purchase (10000 caps)
+GVAR_BLADES_HELP              # never set to 1
+GVAR_DCMUTANT_TOLD_NORTHWEST  # dialogue info
+GVAR_GLOW_ZAX_STATE           # ZAX terminal state
+GVAR_GLOW_ROBOT_EXP           # XP bookkeeping
+GVAR_BITS_BOB_GOES_TO_JAIL    # inside hub_report_bob
+GVAR_BITS_BOB_IN_JAIL         # inside hub_report_bob
+GVAR_GRIFFITH_STATE           # used by necropolis_motorcycle

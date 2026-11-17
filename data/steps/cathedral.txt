@@ -1,0 +1,30 @@
+# Cathedral (Children of the Cathedral) side quests; the Master himself is in main.txt
+
+quest cathedral_contact_laura
+  name   Contact the Followers' spy
+  town   Cathedral
+  kind   optional
+  unlock town AREA_BONEYARD >= 2
+  lockhint Reach the Boneyard first
+  giver  Nicole at the Followers, Boneyard
+  order  50
+  # Nicole gives the password (NICOLE.ssl:512) and, unless you decline, a Followers
+  # diversion (GVAR_FOLLOWER_MACHO_HELP = 1, FOLINVAD.ssl). Laura then tells you about
+  # Morpheus' secret door; map var 2 of CHILDRN1 (MVAR_TALKED_TO_LAURA) is set (LAURA.ssl:490/681).
+  active GVAR_SHADOW_PASSWORD >= 1
+  done   mvar MAP_CHILDRN1 2 >= 1
+  fail   GVAR_MASTER_BLOWN_CUTSCENE >= 1
+
+  step Ask Nicole to help against the Children
+    where  LAFOLLWR:0
+    target npc SCRIPT_NICOLE
+    done   GVAR_SHADOW_PASSWORD >= 1
+    note   Ask about the Children, then if she can help you destroy them
+    src    NICOLE.ssl:512
+
+  step Say 'Red Rider' to Laura in the Cathedral
+    where  CHILDRN1:1
+    target npc SCRIPT_LAURA
+    done   mvar MAP_CHILDRN1 2 >= 1
+    note   She takes you aside and tells you about Morpheus' secret door
+    src    LAURA.ssl:490

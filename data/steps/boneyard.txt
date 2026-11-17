@@ -258,3 +258,40 @@ quest boneyard_kill_harry
     target npc SCRIPT_TALIUS
     done   GVAR_QUEST_KILL_HARRY >= 2
     src    TALIUS.ssl:360
+
+quest boneyard_harden_armor
+  name   Harden your power armor
+  town   Boneyard
+  kind   optional
+  parent boneyard_fix_farm
+  unlock GVAR_QUEST_BONEYARD_5_FIX_FARM >= 9304
+  lockhint After fixing the Adytum farm
+  giver  Miles in Adytum (bring power armor)
+  order  150
+  # CHEMISTRY_BOOK 1 = Miles asked (MILES.ssl:362), 2 = journals bought (STAPLE.ssl:293).
+  # The hardening itself only sets Miles' local var; done = holding the hardened armor.
+  active GVAR_CHEMISTRY_BOOK >= 1
+  done   GVAR_CHEMISTRY_BOOK >= 2 & item PID_HARDENED_POWER_ARMOR
+
+  step Show Miles a suit of power armor
+    where  LAADYTUM:0
+    target npc SCRIPT_MILES
+    done   GVAR_CHEMISTRY_BOOK >= 1
+    note   Carry power armor when you talk to him after the farm is fixed
+    src    MILES.ssl:362
+
+  step Buy chemistry journals from Stapleton
+    where  HUBDWNTN:0
+    target npc SCRIPT_STAPLE
+    done   GVAR_CHEMISTRY_BOOK >= 2
+    note   Mrs. Stapleton, the Hub's librarian, wants 750 caps
+    src    STAPLE.ssl:293
+
+  step Give Miles the journals and the armor
+    where  LAADYTUM:0
+    target npc SCRIPT_MILES
+    done   GVAR_CHEMISTRY_BOOK >= 2 & item PID_HARDENED_POWER_ARMOR
+    note   Takes a day; you get Hardened Power Armor back
+    src    MILES.ssl:424
+
+# ---------------------------------------------------------------- Cathedral

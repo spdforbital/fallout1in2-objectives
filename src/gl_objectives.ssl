@@ -262,15 +262,25 @@ end
 // Done quests and steps stay done (remembered in the savegame, array "obj_done"), so a
 // condition that later goes back (companion told to wait, left a map...) does not un-tick.
 // Repeatable jobs (caravans) are not remembered.
+// A quest only counts as failed once it has been active (a fail condition such as "Bob is
+// dead" must not mark a quest you never heard of). Once seen active it stays active while it
+// can still be done (unlock condition), even if its active condition was map-bound.
 procedure QuestStatus(variable q) begin
-   variable key := "q" + q_key[q];
+   variable key := "q" + q_key[q], act, seen;
    if (doneMem[key]) then return QS_DONE;
-   if (EvalCond(q_fail[q])) then return QS_FAILED;
+   act := EvalCond(q_active[q]);
+   seen := doneMem["a" + q_key[q]];
+   if (act and not seen and not q_rep[q]) then begin
+      doneMem["a" + q_key[q]] := 1;
+      seen := true;
+   end
+   if ((act or seen) and EvalCond(q_fail[q])) then return QS_FAILED;
    if (EvalCond(q_done[q])) then begin
       if (not q_rep[q]) then doneMem[key] := 1;
       return QS_DONE;
    end
-   if (EvalCond(q_active[q])) then return QS_ACTIVE;
+   if (act) then return QS_ACTIVE;
+   if (seen and EvalCond(q_unlock[q])) then return QS_ACTIVE;
    if (EvalCond(q_unlock[q])) then return QS_INACTIVE;   // can be started
    return QS_LOCKED;
 end

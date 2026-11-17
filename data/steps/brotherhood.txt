@@ -54,3 +54,114 @@ quest bos_scout_north
     done   map MAP_MBENT | GVAR_SCOUTED_NORTH_BRO >= 2
     note   Maxson wants the area north scouted: the Military Base
     src    MBENT.ssl:32
+
+quest bos_kyle_power_armor
+  name   Repair Kyle's power armor
+  town   Brotherhood
+  kind   optional
+  parent bos_become_initiate
+  unlock GVAR_QUEST_BROHOOD_1_JOIN_THEM == 2
+  lockhint Become a Brotherhood initiate first
+  giver  Kyle in the Brotherhood workshop
+  order  30
+  # 1 = asked (KYLE.ssl:349), 2 = motivator installed (KYLE.ssl:320),
+  # 3 = repair failed once (needs Repair 75), 4 = repaired, power armor spawned (ARMOR.ssl:106).
+  active GVAR_BROTHER_BUILD_POWER_ARMOR >= 1
+  done   GVAR_BROTHER_BUILD_POWER_ARMOR >= 4
+
+  step Ask Kyle about the damaged power armor
+    where  BROHD34:0
+    target npc SCRIPT_KYLE
+    done   GVAR_BROTHER_BUILD_POWER_ARMOR >= 1
+    src    KYLE.ssl:349
+
+  step Get a Systolic Motivator
+    where  BROHD12:0
+    target npc SCRIPT_MICHAEL
+    done   item PID_MOTIVATOR | GVAR_BROTHER_BUILD_POWER_ARMOR >= 2
+    note   Talk Michael into it, or take one from Rhombus' locker
+    src    MICHAEL.ssl:756
+
+  step Give the motivator to Kyle
+    where  BROHD34:0
+    target npc SCRIPT_KYLE
+    done   GVAR_BROTHER_BUILD_POWER_ARMOR >= 2
+    note   Kyle gives you a technical manual and electronics book
+    src    KYLE.ssl:320
+
+  step Repair the armor on Kyle's workbench
+    where  BROHD34:0
+    target tile 23277:0
+    done   GVAR_BROTHER_BUILD_POWER_ARMOR >= 4
+    note   Use a multi tool or super tool kit on it; Repair 75% after a failure
+    src    ARMOR.ssl:106
+
+
+quest bos_sophia_grenades
+  name   Deliver grenades to Sophia
+  town   Brotherhood
+  kind   optional
+  parent bos_become_initiate
+  unlock GVAR_QUEST_BROHOOD_1_JOIN_THEM == 2
+  lockhint Become a Brotherhood initiate first
+  giver  Michael in the supply room (offer help)
+  order  40
+  # GVAR: 1 = grenades handed over (MICHAEL.ssl:623), 2 = refused to hand them to Sophia,
+  # 3 = delivered, 4 = delivered + bonus (SOPHIA.ssl:358/362/369/376).
+  # Michael's map var 6 (MVAR_SOPHIA_FLAG1) becomes 4 when he pays out (MICHAEL.ssl:191).
+  active GVAR_MICHAEL_SOPHIA_GRENADES >= 1
+  done   mvar MAP_BROHD12 6 >= 4
+  fail   GVAR_MICHAEL_SOPHIA_GRENADES == 2
+
+  step Take the pulse grenades from Michael
+    where  BROHD12:0
+    target npc SCRIPT_MICHAEL
+    done   GVAR_MICHAEL_SOPHIA_GRENADES >= 1
+    note   Ask if you can help him; he hands you 3 pulse grenades
+    src    MICHAEL.ssl:623
+
+  step Bring the 3 grenades to Sophia
+    where  BROHD34:0
+    target npc SCRIPT_SOPHIA
+    done   GVAR_MICHAEL_SOPHIA_GRENADES >= 3
+    note   Be quick: Michael turns sour if you come back late without delivering
+    src    SOPHIA.ssl:362
+
+  step Tell Michael the grenades were delivered
+    where  BROHD12:0
+    target npc SCRIPT_MICHAEL
+    done   mvar MAP_BROHD12 6 >= 4
+    note   XP, plus 2 micro fusion cells if Sophia took a liking to you
+    src    MICHAEL.ssl:191
+
+
+quest bos_elders_help
+  name   Win the Elders' support
+  town   Brotherhood
+  kind   optional
+  parent bos_scout_north
+  unlock GVAR_QUEST_BROHOOD_1_JOIN_THEM == 2 & town AREA_MILITARY_BASE >= 2
+  lockhint Find the Military Base as an initiate
+  giver  Elder Maxson, Brotherhood
+  order  50
+  # Maxson schedules the meeting (map var 19 on BROHD34, MAXSON.ssl:394); the High Elder
+  # sets 2 = 3 Paladins at the Military Base, 1 = 2 Paladins at the Cathedral.
+  active mvar MAP_BROHD34 19 >= 1 | GVAR_BROTHERHOOD_SEND_HELP >= 1
+  done   GVAR_BROTHERHOOD_SEND_HELP >= 1
+  fail   GVAR_VATS_BLOWN_CUTSCENE_DONE >= 1 & GVAR_BROTHERHOOD_SEND_HELP == 0
+
+  step Tell Maxson about the mutant army
+    where  BROHD34:1
+    target npc SCRIPT_MAXSON
+    done   mvar MAP_BROHD34 19 >= 1 | GVAR_BROTHERHOOD_SEND_HELP >= 1
+    note   Urge an attack on the Master's base; he calls the Elders together
+    src    MAXSON.ssl:394
+
+  step Convince the Elders to send Paladins
+    where  BROHD34:1
+    target npc SCRIPT_HIGHELD
+    done   GVAR_BROTHERHOOD_SEND_HELP >= 1
+    note   Speech helps; Cathedral option needs the Master's lair found
+    src    HIGHELD.ssl:216
+
+# ---------------------------------------------------------------- Boneyard

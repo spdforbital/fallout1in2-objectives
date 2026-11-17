@@ -123,7 +123,7 @@ def evalc(cp, off, st):
 def status(flat, st):
     cp, out = flat["cpool"], {}
     for q in flat["quests"]:
-        if evalc(cp, q["fail"], st):
+        if evalc(cp, q["active"], st) and evalc(cp, q["fail"], st):
             s = "failed"
         elif evalc(cp, q["done"], st):
             s = "done"

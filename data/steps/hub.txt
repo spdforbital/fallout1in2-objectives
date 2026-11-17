@@ -397,3 +397,31 @@ quest hub_guard_crimson
   step Protect the caravan until it arrives
     done   GVAR_CC_JOB == 4
     src    encounter/CARVLEAD.ssl:297
+
+# ---------------------------------------------------------------------------------------------
+# Iguana Bob's secret (Fixt/Fo1in2). Gretch, in Doc Morbid's basement (JUNKENT:1 tile 12700),
+# lets slip that the bodies go to Bob in the Hub: GVAR_GRETCH_PRIMECUTS = 1 (GRETCH.ssl:206/223).
+# Sheriff Justin Greene (HUBDWNTN:0 tile 24064) then offers "report Bob" (JUSTIN.ssl:208,
+# needs GVAR_CAN_REPORT_BITS_BOB, 1 in Vault13.gam). BobGuilty: GVAR_BITS_BOB_REPORTED = 1, then
+# 2 on Speech success or Charisma > 3 (JUSTIN.ssl:228: XP, Hub rep, optional 250 caps);
+# failure leaves it at 1 and the option never comes back (LVAR_Bob_Report_Failed).
+# Bob can also be confronted directly (BITSBOB.ssl:232, Bob20: blackmail/threat; local vars only).
+# Not a "someone asks you" job: self-initiated report with a reward.
+quest hub_report_bob
+  name   Report Iguana Bob
+  town   Hub
+  kind   optional
+  giver  Gretch at Doc Morbid's, Junktown
+  unlock GVAR_GRETCH_PRIMECUTS >= 1
+  lockhint Find out where Bob's meat comes from
+  order  90
+  active GVAR_GRETCH_PRIMECUTS >= 1
+  done   GVAR_BITS_BOB_REPORTED >= 2
+  fail   GVAR_BITS_BOB_REPORTED == 1 | GVAR_IS_BITS_BOB_ALIVE == 0 & GVAR_BITS_BOB_REPORTED == 0
+
+  step Report Bob to Sheriff Justin Greene
+    where  HUBDWNTN:0
+    target npc SCRIPT_JUSTIN
+    done   GVAR_BITS_BOB_REPORTED >= 2
+    note   Speech roll or Charisma 4+; one try only. Ask him for a fee
+    src    JUSTIN.ssl:228

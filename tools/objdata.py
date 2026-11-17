@@ -37,6 +37,7 @@ TOWN_ORDER = [t for t, _ in TOWNS]
 
 # map name -> (town, short label shown as "go to <label>")
 MAP_INFO = {
+    "SCRAPHEAP": ("Necropolis", "Scrapheap (motel PC)"),
     "V13ENT": ("Vault 13", "Vault 13 cave"),
     "VAULT13": ("Vault 13", "Vault 13"),
     "VAULTENT": ("Vault 15", "Vault 15 shack"),

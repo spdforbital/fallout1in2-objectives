@@ -25,8 +25,9 @@ installed as its own removable mod.
   2. *Gear*: better weapons/armor on the current map, nearest first, and where they are.
   3. *Settings*: everything in `objectives.ini`, changeable in game.
 - **Companions**: recruit quests for Ian, Dogmeat, Tycho, Katja, Mr. Handy and the eyebot.
-- All 42 Pip-Boy quests plus jobs the Pip-Boy doesn't list (caravan guard jobs, Decker,
-  Thieves' Circle, ...). Steps were checked against the Fo1in2 script sources; each step
+- 58 quests: the 3 main quests, 6 companions and 49 optional quests - the Pip-Boy ones plus
+  jobs the Pip-Boy doesn't list (caravan guards, Decker, the Thieves' Circle, Scrapheap,
+  Kyle's power armor, Sophia's grenades, the Elders' support, Iguana Bob, ...). Steps were checked against the Fo1in2 script sources; each step
   names the script line that sets it (`src` in the data files).
 - Done steps stay done for that savegame (stored in the save), except repeatable jobs.
 
@@ -62,7 +63,8 @@ the palette from the installed `mods/fo1_base`.
 
 - `src/gl_objectives.ssl` - the sfall global script (panel, markers, outlines, window).
 - `data/steps/*.txt` - quest steps per town; format in `data/steps/FORMAT.txt`.
-- `tools/` - data compiler and checks (`build_data.py`, `objdata.py`, `test_data.py`),
+- `tools/` - data compiler and checks (`build_data.py`, `objdata.py`, `test_data.py`;
+  `coverage.py` lists game flags no quest uses, minus `data/coverage_ignore.txt`),
   arrow images (`make_arrows.py`), build/install scripts.
 - `mod/` - files shipped with the mod (ini, readme, arrow art).
 - `test/gl_objtest.ssl` - test-only helper: Insert jumps through quest situations.
