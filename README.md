@@ -69,6 +69,10 @@ the palette from the installed `mods/fo1_base`.
   Never ship it, never save with it installed.
 - `DESIGN.md` - the original design.
 
+## License
+
+MIT, see [LICENSE](LICENSE). Covers this project's own code, data and art only.
+
 ## Credits
 
 Fallout 1in2 by the Rotators team; sfall by the sfall team. Fallout is a trademark of
