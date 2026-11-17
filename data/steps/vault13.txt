@@ -1,0 +1,63 @@
+# Vault 13 optional quests.
+# Tiles read from mods/fo1_base/maps/VAULT13.MAP.
+# When the water chip is returned, the Overseer sets unfinished 101/102 to 3 (OVER.ssl:577-580);
+# the Pip-Boy shows that as done (>= 2), here it counts as failed (quest closed without you).
+# Commented-out Vault 13 quests in quests.txt: only 106 (library, GVAR 1372) is set by the scripts
+# (VAULT13.ssl:45, LIBCOMP.ssl:65). 105, 107-110 (GVAR 1371, 1373-1376) are never set: skipped.
+
+quest vault13_rebels
+  name   Calm the rebel faction
+  town   Vault 13
+  kind   optional
+  giver  Theresa, Vault 13 living level
+  pipboy 101
+  done   GVAR_QUEST_VAULT13_1_REBELS == 2
+  order  1
+
+  step Talk Theresa out of leaving the Vault
+    where  VAULT13:1
+    target npc SCRIPT_THERESA
+    done   GVAR_QUEST_VAULT13_1_REBELS >= 2
+    note   Speech check; also at the rebels' 17:00 meeting. Killing her ends it
+    src    THERESA.ssl:299
+
+  step Talk to her after returning the chip
+    alt
+    where  VAULT13:1
+    target npc SCRIPT_THERESA
+    show   GVAR_VAULT_WATER >= 2
+    done   GVAR_QUEST_VAULT13_1_REBELS == 2
+    src    THERESA.ssl:418
+
+quest vault13_water_thief
+  name   Find the water thief
+  town   Vault 13
+  kind   optional
+  giver  Lyle, Cindy or the water guard
+  pipboy 102
+  done   GVAR_QUEST_VAULT13_5_WTR_THIEF == 2
+  fail   GVAR_QUEST_VAULT13_5_WTR_THIEF == 3
+  order  2
+
+  step Catch the thief at the water locker
+    where  VAULT13:2
+    target tile 20506:2
+    done   GVAR_QUEST_VAULT13_5_WTR_THIEF >= 2
+    note   Comes at night (before 6:00); talk him into giving up, or kill him
+    src    WTRTHIEF.ssl:342
+
+quest vault13_library
+  name   Learn at the library
+  town   Vault 13
+  kind   optional
+  giver  Library terminals, Vault 13
+  active GVAR_QUEST_VAULT13_7_LEARN_AT_LIBRARY >= 1
+  done   GVAR_QUEST_VAULT13_7_LEARN_AT_LIBRARY >= 2
+  order  3
+
+  step Use Science on a library terminal
+    where  VAULT13:2
+    target tile 17533:2,21134:2
+    done   GVAR_QUEST_VAULT13_7_LEARN_AT_LIBRARY >= 2
+    note   IQ roll, takes hours; if a terminal fails you, try the other one
+    src    LIBCOMP.ssl:65

@@ -1,0 +1,90 @@
+# The Glow
+
+quest glow_gain_entrance
+  name   Gain entrance into the Glow
+  town   Glow
+  kind   optional
+  lockhint Learn where the Glow is
+  parent bos_become_initiate
+  unlock town AREA_GLOW >= 1
+  giver  Cabbot's test, or find the crater
+  pipboy 1000
+  order  10
+
+  # GVAR_MARK_GLOW_2 doubles as the quest var: 1 on first GLOWENT visit,
+  # 2 on first entering GLOW1. MVAR 0 of GLOWENT = rope tied to the beam.
+  step Get a rope
+    done   item PID_ROPE | mvar MAP_GLOWENT 0 == 1 | GVAR_MARK_GLOW_2 >= 2
+    note   You need a rope to climb down the elevator shaft
+
+  step Tie the rope to the beam over the shaft
+    where  GLOWENT
+    target scenery PID_BEAM_1
+    done   mvar MAP_GLOWENT 0 == 1 | GVAR_MARK_GLOW_2 >= 2
+    note   Use the rope on the metal beam
+    src    GENT2LV1.ssl:38
+
+  step Climb down into the Glow
+    where  GLOWENT
+    target scenery PID_BEAM_2
+    done   GVAR_MARK_GLOW_2 >= 2
+    src    GLOWMAP1.ssl:34
+
+quest glow_disarm_traps
+  name   Disarm the Glow's traps
+  town   Glow
+  kind   optional
+  lockhint Get into the Glow first
+  parent glow_restore_power
+  unlock GVAR_MARK_GLOW_2 >= 2
+  done   GVAR_GLOW_TRAPS_STATE == 1
+  active GVAR_MARK_GLOW_2 >= 2
+  giver  ZAX / Tylier computers in the Glow
+  pipboy 1001
+  order  30
+
+  # Coarse/uncertain: GVAR_QUEST_GLOW_TRAPS is never set by any fo1in2 script
+  # (glow.h: "Quest currently not implemented"), so the Pip-Boy never shows it.
+  # The real trap state is GVAR_GLOW_TRAPS_STATE (1 = inactive), toggled by ZAX.
+  step Shut off the traps via the ZAX computer
+    where  GLOW2:0
+    target scenery 33555072
+    done   GVAR_GLOW_TRAPS_STATE == 1 | GVAR_QUEST_GLOW_TRAPS >= 2
+    note   Main power must be on; Science roll -25 or the security holodisk
+    src    ZAX.ssl:724
+
+  step Enter the security code at Tylier
+    alt
+    done   GVAR_GLOW_TRAPS_STATE == 1
+    note   Needs the security holodisk read, and IN 5
+    src    TYLIER.ssl:106
+
+quest glow_restore_power
+  name   Turn on power for the Glow
+  town   Glow
+  kind   optional
+  done   GVAR_GLOW_POWER == 2
+  lockhint Climb down into the Glow first
+  parent glow_gain_entrance
+  unlock GVAR_MARK_GLOW_2 >= 2
+  giver  The Glow's dead generator
+  pipboy 1002
+  order  20
+
+  step Get down to the lower levels of the Glow
+    done   map MAP_GLOW2 | GVAR_QUEST_GLOW_2_START_POWER >= 2
+    note   Levels 4-6 (GLOW2); keycards open the colored doors on the way
+
+  step Repair the generator on the bottom level
+    where  GLOW2:2
+    target scenery 33555088
+    done   GVAR_QUEST_GLOW_2_START_POWER >= 2
+    note   Repair roll (tool kits help); fail with Repair <35: retry above 35
+    src    GLOWGEN.ssl:102
+
+  step Switch the main power on at a terminal
+    where  GLOW2
+    done   GVAR_GLOW_POWER == 2
+    note   The power terminal, or ask ZAX to reroute power
+    src    GPWRTERM.ssl:100
+

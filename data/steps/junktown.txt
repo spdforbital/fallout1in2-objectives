@@ -1,0 +1,301 @@
+# Junktown
+# Maps: JUNKENT = entrance (Lars, gate), JUNKCSNO = casino side (Gizmo, Skum Pitt: Neal,
+# Saul, Trish, urn), JUNKKILL = Killian's side (Killian, Crash House: Marcelle/Sinthia,
+# Skulz hideout: Vinnie, Sherry; Trish's home).
+# Killian vs. Gizmo are mutually exclusive: jt_kill_killian fails once Gizmo is dead or
+# arrested, jt_stop_gizmo fails once Killian is dead (or Gizmo dies outside the raid).
+
+# NOTE: GVAR_SAUL_EVENT (1144) is never set by any script, so this Pip-Boy entry never shows
+# in game. Tracked here through the Saul/Trish relationship instead:
+# GVAR_SAUL_STATUS 1 = met Saul (SAUL.ssl:309), 2 = Saul mentioned Trish, 3 = Saul dead.
+# GVAR_TRISH_STATUS is a bit field; RELATIONSHIP_SAVED is bit_32 (the sign bit), so the
+# value is < 0 exactly when the couple has been reconciled; TRISH_IS_DEAD is bit_31, so
+# a value >= 1073741824 means Trish died before that.
+quest jt_help_saul
+  name   Help Saul
+  town   Junktown
+  kind   optional
+  giver  Saul at the Skum Pitt, or Trish
+  pipboy 400
+  order  1
+  active GVAR_SAUL_STATUS >= 1 | GVAR_TRISH_STATUS != 0
+  done   GVAR_TRISH_STATUS < 0
+  fail   GVAR_SAUL_STATUS == 3 & GVAR_TRISH_STATUS >= 0 | GVAR_TRISH_STATUS >= 1073741824
+
+  step Talk to Saul at the Skum Pitt
+    where  JUNKCSNO:0
+    target npc SCRIPT_SAUL
+    done   GVAR_SAUL_STATUS >= 1 | GVAR_TRISH_STATUS < 0
+    src    SAUL.ssl:309
+
+  step Ask Saul about Trish
+    where  JUNKCSNO:0
+    target npc SCRIPT_SAUL
+    done   GVAR_SAUL_STATUS == 2 | GVAR_TRISH_STATUS < 0
+    src    SAUL.ssl:430
+
+# check_relationship_saved (area/junktown.h) runs in SAUL.ssl:240 and TRISH.ssl:212.
+  step Make Saul and Trish understand each other
+    where  JUNKCSNO:0,JUNKKILL:0
+    target npc SCRIPT_TRISH,SCRIPT_SAUL
+    done   GVAR_TRISH_STATUS < 0
+    note   Talk to each about the other; Speech checks, IQ 6 helps
+    src    SAUL.ssl:240
+
+
+# GVAR_KILL_KILLIAN: 1 = hired by Gizmo (GIZMO.ssl:319/541), 2 = Killian dead while active
+# (KILLIAN.ssl:260), 3 = cancelled; GIZMO.ssl:140 sets 3 whenever Gizmo dies (even after 2,
+# and the Pip-Boy then shows it as completed). We require Gizmo's payment or Gizmo gone
+# after Killian.
+quest jt_kill_killian
+  name   Kill Killian
+  town   Junktown
+  kind   optional
+  giver  Gizmo in his casino
+  pipboy 401
+  order  2
+  done   GVAR_HIRED_BY_GIZMO >= 2 | GVAR_KILLIAN_DEAD == 1 & GVAR_GIZMO_DEAD == 1
+  fail   GVAR_KILLIAN_DEAD == 0 & GVAR_GIZMO_DEAD == 1 | GVAR_KILLIAN_DEAD == 0 & GVAR_CAPTURE_GIZMO == 2
+
+  step Kill Killian Darkwater
+    where  JUNKKILL:0
+    target npc SCRIPT_KILLIAN
+    done   GVAR_KILLIAN_DEAD == 1
+    src    KILLIAN.ssl:256
+
+  step Take Killian's dog tags
+    where  JUNKKILL:0
+    target item PID_DOG_TAGS
+    done   item PID_DOG_TAGS | GVAR_HIRED_BY_GIZMO >= 2
+    note   The tags are on Killian's body
+    src    KILLIAN.ssl:254
+
+  step Show the dog tags to Gizmo
+    where  JUNKCSNO:0
+    target npc SCRIPT_GIZMO
+    done   GVAR_HIRED_BY_GIZMO >= 2
+    src    GIZMO.ssl:381
+
+
+# GVAR_SAVE_SINTHIA: 1 = Marcelle asked for help (MARCELLE.ssl:347) after the crazed raider
+# took Sinthia hostage in your rented Crash House room (CRASHRM.ssl:73), 2 = resolved.
+# 2 is also set when Sinthia dies (SINTHIA.ssl:129); only the JUNKKILL map var
+# MVAR_Sinthia_dead (0) tells the two apart, so the fail condition has to use it.
+quest jt_rescue_sinthia
+  name   Rescue Sinthia
+  town   Junktown
+  kind   optional
+  giver  Marcelle, when you rent a Crash House room
+  pipboy 402
+  order  3
+  fail   mvar MAP_JUNKKILL 0 == 2
+
+  step Talk the crazed raider down
+    where  JUNKKILL:0
+    target npc SCRIPT_JTRAIDER
+    done   GVAR_SAVE_SINTHIA >= 2
+    src    JTRAIDER.ssl:275
+
+  step Kill or knock him out, sparing Sinthia
+    alt
+    where  JUNKKILL:0
+    target npc SCRIPT_JTRAIDER
+    done   GVAR_SAVE_SINTHIA >= 2
+    note   Sneak up to knock him out, or shoot carefully
+    src    JTRAIDER.ssl:177
+
+quest jt_save_trish
+  name   Save Trish
+  town   Junktown
+  kind   optional
+  lockhint Not finished in the game - cannot be done
+  unlock false
+  giver  Trish at the Skum Pitt
+  pipboy 403
+  order  4
+  active false
+
+  step Protect Trish from the Skulz
+    where  JUNKCSNO:0
+    target npc SCRIPT_TRISH
+    done   false
+
+
+# GVAR_CAPTURE_GIZMO: 1 = Killian got the evidence (KILLIAN.ssl:871/883), 2 = Gizmo stopped
+# (LARS.ssl:231 Lars arrests him, JUNKCAS.ssl:176 raid with Lars and Killian,
+# KILLIAN.ssl:808). Shown from Killian's hiring on (KILLIAN.ssl:983).
+# During the raid GVAR_LARS_N_KILLIAN_ON_CASINO is 1 (LARS.ssl:216) until completion.
+quest jt_stop_gizmo
+  name   Stop Gizmo
+  town   Junktown
+  kind   optional
+  lockhint Save Killian or report Gizmo's offer
+  unlock mvar MAP_JUNKKILL 2 == 1 | GVAR_HIRED_BY_GIZMO == 1 | GVAR_HIRED_BY_KILLIAN >= 1
+  giver  Killian Darkwater in his store
+  pipboy 404
+  order  5
+  active GVAR_CAPTURE_GIZMO >= 1 | GVAR_HIRED_BY_KILLIAN >= 1
+  fail   GVAR_GIZMO_DEAD == 1 & GVAR_CAPTURE_GIZMO < 2 & GVAR_LARS_N_KILLIAN_ON_CASINO == 0 | GVAR_KILLIAN_DEAD == 1 & GVAR_CAPTURE_GIZMO < 2
+
+# GVAR_BUG_PLANTED: Gizmo carries the bug (GIZMO.ssl:115); GOT_CONFESSION: GIZMO.ssl:429/529.
+  step Plant the bug on Gizmo
+    where  JUNKCSNO:0
+    target npc SCRIPT_GIZMO
+    done   GVAR_BUG_PLANTED >= 1 | GVAR_CAPTURE_GIZMO >= 1
+    src    GIZMO.ssl:115
+
+  step Tape his confession
+    alt
+    where  JUNKCSNO:0
+    target npc SCRIPT_GIZMO
+    done   GVAR_GOT_CONFESSION >= 1 | GVAR_CAPTURE_GIZMO >= 1
+    note   Talk to him carrying the tape recorder
+    src    GIZMO.ssl:429
+
+  step Bring the evidence to Killian
+    where  JUNKKILL:0
+    target npc SCRIPT_KILLIAN
+    done   GVAR_CAPTURE_GIZMO >= 1
+    src    KILLIAN.ssl:871
+
+  step Tell Lars to arrest Gizmo
+    where  JUNKENT:0
+    target npc SCRIPT_LARS
+    done   GVAR_CAPTURE_GIZMO >= 2 | GVAR_LARS_N_KILLIAN_ON_CASINO == 1 & GVAR_BUST_NEAL_TIMER == 0
+    src    LARS.ssl:231
+
+  step Take Gizmo down with Lars and Killian
+    alt
+    where  JUNKCSNO:0
+    target npc SCRIPT_GIZMO
+    show   GVAR_LARS_N_KILLIAN_ON_CASINO == 1 & GVAR_BUST_NEAL_TIMER == 0
+    done   GVAR_CAPTURE_GIZMO >= 2
+    src    JUNKCAS.ssl:176
+
+quest jt_bust_skulz
+  name   Bust the Skulz
+  town   Junktown
+  kind   optional
+  giver  Lars at the Junktown gate
+  pipboy 405
+  order  6
+
+  step Warn Lars about the hit on Neal
+    where  JUNKENT:0
+    target npc SCRIPT_LARS
+    show   GVAR_BUST_NEAL_TIMER > 0 | GVAR_AMBUSH_SKULLZ == 1
+    done   GVAR_AMBUSH_SKULLZ == 1 | GVAR_BUST_SKULZ == 2
+    src    LARS.ssl:426
+
+  step Ambush the Skulz at the Skum Pitt
+    where  JUNKCSNO:0
+    target npc SCRIPT_VINNIE
+    show   GVAR_AMBUSH_SKULLZ == 1
+    done   GVAR_BUST_SKULZ == 2
+    note   Or let Lars deal with them alone
+    src    JUNKCAS.ssl:187
+
+  step Let Lars bust them alone
+    alt
+    where  JUNKENT:0
+    target npc SCRIPT_LARS
+    show   GVAR_AMBUSH_SKULLZ == 1
+    done   GVAR_BUST_SKULZ == 2
+    src    LARS.ssl:243
+
+  step Get Sherry to testify against the Skulz
+    where  JUNKKILL:0
+    target npc SCRIPT_SHERRY
+    show   GVAR_AMBUSH_SKULLZ == 0
+    done   GVAR_SHERRY_TELLS_ON_SKULZ == 1 | GVAR_BUST_SKULZ == 2
+    note   Ask her to snitch (Speech check, or IQ 6)
+    src    SHERRY.ssl:388
+
+  step Tell Lars that Sherry will testify
+    where  JUNKENT:0
+    target npc SCRIPT_LARS
+    show   GVAR_AMBUSH_SKULLZ == 0
+    done   GVAR_BUST_SKULZ == 2
+    src    LARS.ssl:384
+
+
+# GVAR_JOIN_SKULLZ: 1 = after the Skulz rough up Trish in the Skum Pitt (NEAL.ssl:363),
+# 2 = Vinnie22 (VINNIE.ssl:373) or Vinnie's death (VINNIE.ssl:122, Pip-Boy then says done).
+# Vinnie22 is unreachable once Neal is dead (talk_p_proc only floats then), so the quest is
+# done when Neal dies after Vinnie's deal (GVAR_BUST_NEAL_STATE 1 = later, 2 = now).
+quest jt_join_skulz
+  name   Join the Skulz
+  town   Junktown
+  kind   optional
+  lockhint After the Skulz hassle Trish at the Pitt
+  unlock GVAR_JOIN_SKULLZ >= 1
+  giver  Vinnie, Skulz hideout
+  pipboy 406
+  order  7
+  done   GVAR_IS_NEAL_DEAD == 1 & GVAR_BUST_NEAL_STATE >= 1
+  fail   GVAR_BUST_SKULZ == 2 & GVAR_IS_NEAL_DEAD == 0 | GVAR_JOIN_SKULLZ >= 2 & GVAR_IS_NEAL_DEAD == 0
+
+  step Steal Neal's urn for Vinnie
+    where  JUNKCSNO:0
+    target scenery PID_TROPHY
+    done   GVAR_URN_STOLEN >= 1 | GVAR_BUST_NEAL_TIMER > 0 | GVAR_BUST_NEAL_STATE >= 1
+    note   Vinnie in the Skulz hideout asks for it as your initiation
+    src    TROPHY.ssl:47
+
+  step Give the urn to Vinnie
+    where  JUNKKILL:0
+    target npc SCRIPT_VINNIE
+    done   GVAR_BUST_NEAL_TIMER > 0 | GVAR_BUST_NEAL_STATE >= 1
+    src    VINNIE.ssl:359
+
+  step Help the Skulz kill Neal
+    where  JUNKCSNO:0
+    target npc SCRIPT_NEAL
+    done   GVAR_IS_NEAL_DEAD == 1
+    note   Go with Vinnie now, or the Skulz do it within two days
+    src    NEAL.ssl:255
+
+
+# GVAR_URN_STOLEN: 1 = taken from the trophy (TROPHY.ssl:47/92), 0 again if put back
+# (TROPHY.ssl:65), 2 = Neal died with it missing (NEAL.ssl:262) or got it back (NEAL.ssl:567).
+# Shown from the Skulz offer on so the theft itself is a step.
+quest jt_neals_urn
+  name   Steal Neal's urn
+  town   Junktown
+  kind   optional
+  lockhint After the Skulz hassle Trish at the Pitt
+  parent jt_join_skulz
+  unlock GVAR_JOIN_SKULLZ >= 1 | GVAR_URN_STOLEN >= 1
+  giver  Vinnie, as the Skulz initiation
+  pipboy 407
+  order  8
+  active GVAR_URN_STOLEN >= 1 | GVAR_JOIN_SKULLZ == 1
+
+  step Steal the urn from the Skum Pitt
+    where  JUNKCSNO:0
+    target scenery PID_TROPHY
+    done   GVAR_URN_STOLEN >= 1
+    note   Use it 4:10-12:00 or Steal it (risky); bar is in the Skum Pitt
+    src    TROPHY.ssl:47
+
+  step Give the urn to Vinnie
+    where  JUNKKILL:0
+    target npc SCRIPT_VINNIE
+    show   GVAR_JOIN_SKULLZ >= 1
+    done   GVAR_BUST_NEAL_TIMER > 0 | GVAR_BUST_NEAL_STATE >= 1 | GVAR_URN_STOLEN >= 2
+    src    VINNIE.ssl:359
+
+  step Help the Skulz kill Neal
+    where  JUNKCSNO:0
+    target npc SCRIPT_NEAL
+    show   GVAR_BUST_NEAL_TIMER > 0 | GVAR_BUST_NEAL_STATE >= 1
+    done   GVAR_URN_STOLEN >= 2
+    src    NEAL.ssl:262
+
+  step Or give the urn back to Neal
+    where  JUNKCSNO:0
+    target npc SCRIPT_NEAL
+    show   GVAR_BUST_NEAL_TIMER == 0 & GVAR_BUST_NEAL_STATE == 0
+    done   GVAR_URN_STOLEN >= 2
+    note   He rewards you with free drinks
+    src    NEAL.ssl:567

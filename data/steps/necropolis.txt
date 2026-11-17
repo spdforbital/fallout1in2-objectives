@@ -1,0 +1,55 @@
+# Necropolis side quests (the water chip itself is covered by the main-quest file)
+
+quest necropolis_watershed_mutants
+  name   Clear the Watershed mutants
+  town   Necropolis
+  kind   optional
+  done   GVAR_NECROP_MUTANTS_KILLED >= 2 | GVAR_WATERSHED_MUTANTS_LEAVE >= 1
+  giver  Set in the Hall of the Dead
+  pipboy 600
+  order  10
+
+  step Talk to Set in the Hall of the Dead
+    where  HALLDED
+    target npc SCRIPT_SET
+    done   GVAR_NECROP_MUTANTS_KILLED >= 1
+    note   Set asks you to deal with the super mutants at the Watershed
+    src    SET.ssl:343
+
+  step Kill Harry and his mutants at the Watershed
+    where  WATRSHD:1
+    target npc SCRIPT_HARRY
+    count  PID_HARRY,PID_SUPER_MUTANT
+    done   GVAR_NECROP_MUTANTS_KILLED >= 2
+    note   Done when all of Harry's group is dead (GVAR_SUPER_MUTANTS_KILLED)
+    src    HARRY.ssl:610
+
+  step Let Harry's group leave
+    alt
+    where  WATRSHD:1
+    target npc SCRIPT_HARRY
+    show   GVAR_VATS_BLOWN_CUTSCENE_DONE >= 1
+    done   GVAR_WATERSHED_MUTANTS_LEAVE >= 1
+    note   After the Vats are destroyed Harry offers to leave
+    src    HARRY.ssl:216
+
+quest necropolis_water_pump
+  name   Fix the water pump
+  town   Necropolis
+  kind   optional
+  giver  Ghoul leader (Hall of the Dead) or Set
+  pipboy 601
+  order  20
+
+  step Find the pump parts at the Watershed
+    where  WATRSHD:0
+    target item PID_PUMP_PARTS
+    done   item PID_PUMP_PARTS | GVAR_NECROP_WATER_PUMP_FIXED >= 2
+    note   Parts lie on the Watershed map; a Hub merchant may also stock them
+
+  step Repair the water pump with the parts
+    where  WATRSHD:1
+    target scenery 33555336
+    done   GVAR_NECROP_WATER_PUMP_FIXED >= 2
+    note   Repair roll -5; a critical failure destroys the parts
+    src    NH2OPUMP.ssl:79

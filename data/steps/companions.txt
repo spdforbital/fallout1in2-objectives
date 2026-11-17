@@ -1,0 +1,184 @@
+# Companions (Recruit <name> quests)
+# Party limit (GVAR_ENABLE_FO2_PARTY_LIMIT=1 in config/fo1_settings.ini): CH/2 (+1 with
+# Magnetic Personality), at most 5 (party.h:49-51). Every recruit dialogue checks it,
+# except Dogmeat's first join (feeding / leather jacket), which always succeeds.
+# *_JOINS_GIVE_EXP is set to 1 right after the first dialogue in which the companion is
+# in the party (the XP reward); it never goes back to 0, so it is the sticky "has joined".
+
+# GVAR_IAN_HIRELING_STATUS: 0 = never talked, 1 = introduced yourself (IAN.ssl:354),
+# 2 = in party (IAN.ssl:305), 3 = told to wait (IAN.ssl:784) OR dead (IAN.ssl:210).
+# Ian is killed when Shady Sands is invaded and he is not with you (IAN.ssl:225), and
+# turns hostile when the town hates you (GVAR_ENEMY_SHADY_SANDS, IAN.ssl:260).
+quest recruit_ian
+  name   Recruit Ian
+  town   Shady Sands
+  kind   companion
+  giver  Ian, in a hut in Shady Sands (west side)
+  unlock true
+  active GVAR_IAN_HIRELING_STATUS >= 1 | party PID_IAN
+  done   GVAR_IAN_JOINS_GIVE_EXP == 1 | party PID_IAN
+  fail   GVAR_IAN_HIRELING_STATUS == 3 & GVAR_IAN_JOINS_GIVE_EXP == 0 | GVAR_SHADY_SANDS_WAS_INVADED == 1 & GVAR_IAN_JOINS_GIVE_EXP == 0 | GVAR_ENEMY_SHADY_SANDS == 1 & GVAR_IAN_JOINS_GIVE_EXP == 0
+
+  step Talk to Ian and introduce yourself
+    where  SHADYW:0
+    target npc SCRIPT_IAN
+    done   GVAR_IAN_HIRELING_STATUS >= 1 | party PID_IAN
+    src    IAN.ssl:354
+
+  step Hire Ian for 100 caps
+    where  SHADYW:0
+    target npc SCRIPT_IAN
+    done   GVAR_IAN_JOINS_GIVE_EXP == 1 | party PID_IAN
+    note   Ask for his help; needs neutral reaction and a free party slot
+    src    IAN.ssl:333
+
+  step Talk Ian into joining for a share
+    alt
+    where  SHADYW:0
+    target npc SCRIPT_IAN
+    done   GVAR_IAN_JOINS_GIVE_EXP == 1 | party PID_IAN
+    note   "A piece of the action": IQ 6 option, Speech roll +20
+    src    IAN.ssl:508
+
+
+# GVAR_DOGMEAT_HIRELING_STATUS: 0 = not with you (also after "stay here", DOGMEAT.ssl:271),
+# 1 = in party (DOGMEAT.ssl:257/277), 3 = dead (DOGMEAT.ssl:136). No sticky flag exists.
+# The Junktown invasion kills him if status != 1 (JUNKCAS.ssl:326).
+quest recruit_dogmeat
+  name   Recruit Dogmeat
+  town   Junktown
+  kind   companion
+  giver  Dogmeat, blocking Phil's door in Junktown
+  unlock true
+  active town AREA_JUNKTOWN >= 2 | GVAR_DOGMEAT_HIRELING_STATUS != 0
+  done   GVAR_DOGMEAT_HIRELING_STATUS == 1 | party PID_DOGMEAT
+  fail   GVAR_DOGMEAT_HIRELING_STATUS == 3
+
+  step Feed Dogmeat
+    where  JUNKCSNO:0
+    target npc SCRIPT_DOGMEAT
+    done   GVAR_DOGMEAT_HIRELING_STATUS == 1 | party PID_DOGMEAT
+    note   Use Iguana-on-a-stick, Meat-on-a-stick or Meat Jerky on him
+    src    DOGMEAT.ssl:242
+
+  step Walk up to him wearing a Leather Jacket
+    alt
+    where  JUNKCSNO:0
+    target npc SCRIPT_DOGMEAT
+    done   GVAR_DOGMEAT_HIRELING_STATUS == 1 | party PID_DOGMEAT
+    note   Equip the jacket as armor; he joins as soon as he sees you
+    src    DOGMEAT.ssl:89
+
+
+# GVAR_TYCHO_HIRELING_STATUS: 1 = talked (TYCHO.ssl:326), 2 = in party (TYCHO.ssl:562),
+# 3 = waiting (TYCHO.ssl:508/722) or dead (TYCHO.ssl:212); BUG: VASQUEZ.ssl:507 also sets
+# it to 3 when Vasquez (cut content, disabled here) is told to wait.
+# He offers to join only after Killian has hired you against Gizmo (GVAR_HIRED_BY_KILLIAN,
+# KILLIAN.ssl:983, after you saved Killian from the assassin) -> option at TYCHO.ssl:413.
+# He is hostile while Junktown hates you; the Junktown invasion kills him (JUNKCAS.ssl:329).
+quest recruit_tycho
+  name   Recruit Tycho
+  town   Junktown
+  kind   companion
+  giver  Tycho in the Skum Pitt, Junktown
+  unlock true
+  active GVAR_TYCHO_HIRELING_STATUS >= 1 | party PID_TYCHO
+  done   GVAR_TYCHO_JOINS_GIVE_EXP == 1 | party PID_TYCHO
+  fail   GVAR_TYCHO_HIRELING_STATUS == 3 & GVAR_TYCHO_JOINS_GIVE_EXP == 0 | GVAR_KILLIAN_DEAD == 1 & GVAR_HIRED_BY_KILLIAN == 0 & GVAR_TYCHO_JOINS_GIVE_EXP == 0 | GVAR_JUNKTOWN_WAS_INVADED == 1 & GVAR_TYCHO_JOINS_GIVE_EXP == 0 | GVAR_ENEMY_JUNKTOWN == 1 & GVAR_TYCHO_JOINS_GIVE_EXP == 0 | GVAR_DUDE_ENEMY_JUNK_CITIZEN == 1 & GVAR_TYCHO_JOINS_GIVE_EXP == 0 | GVAR_DUDE_ENEMY_JUNK_BOXER == 1 & GVAR_TYCHO_JOINS_GIVE_EXP == 0
+
+  step Talk to Tycho in the Skum Pitt
+    where  JUNKCSNO:0
+    target npc SCRIPT_TYCHO
+    done   GVAR_TYCHO_HIRELING_STATUS >= 1 | party PID_TYCHO
+    note   Accept his Nuka-Cola and ask about him
+    src    TYCHO.ssl:326
+
+  step Get hired by Killian to stop Gizmo
+    where  JUNKKILL:0
+    target npc SCRIPT_KILLIAN
+    done   GVAR_HIRED_BY_KILLIAN >= 1 | GVAR_TYCHO_JOINS_GIVE_EXP == 1 | party PID_TYCHO
+    note   Save Killian from Gizmo's assassin, then accept his job
+    src    KILLIAN.ssl:983
+
+  step Tell Tycho you work for Killian
+    where  JUNKCSNO:0
+    target npc SCRIPT_TYCHO
+    done   GVAR_TYCHO_JOINS_GIVE_EXP == 1 | party PID_TYCHO
+    note   He then joins; needs a free party slot and a non-bad reaction
+    src    TYCHO.ssl:562
+
+
+# GVAR_KATJA_HIRELING_STATUS: 1 = told her who you are (KATJA.ssl:290), 2 = in party
+# (KATJA.ssl:397/401), 3 = waiting (KATJA.ssl:472/647) or dead (KATJA.ssl:179).
+# No skill or payment check: KATJA.ssl dialogue 130 -> 145 -> 149 (Katja17 -> 18 -> 20).
+# Hostile if the Followers hate you (GVAR_ENEMY_FOLLOWERS, KATJA.ssl:164); killed by the
+# Boneyard invasion unless she is in the party (FOLLMAP.ssl:109).
+quest recruit_katja
+  name   Recruit Katja
+  town   Boneyard
+  kind   companion
+  giver  Katja in the Followers' library, Boneyard
+  unlock true
+  active GVAR_KATJA_HIRELING_STATUS >= 1 | party PID_KATJA
+  done   GVAR_KATJA_JOINS_GIVE_EXP == 1 | party PID_KATJA
+  fail   GVAR_KATJA_HIRELING_STATUS == 3 & GVAR_KATJA_JOINS_GIVE_EXP == 0 | GVAR_FOLLOWERS_INVADED == 1 & GVAR_KATJA_JOINS_GIVE_EXP == 0 | GVAR_ENEMY_FOLLOWERS == 1 & GVAR_KATJA_JOINS_GIVE_EXP == 0
+
+  step Ask Katja to come along
+    where  LAFOLLWR:0
+    target npc SCRIPT_KATJA
+    done   GVAR_KATJA_JOINS_GIVE_EXP == 1 | party PID_KATJA
+    note   Ask about the area, say she'd be welcome; needs a free party slot
+    src    KATJA.ssl:397
+
+
+# GVAR_MR_HANDYC_HIRELING_STATUS: 1 = reprogrammed (in party or waiting, MRHANDYC.ssl:582/586),
+# 2 = you attacked it after the repair (MRHANDYC.ssl:161), 3 = dead (MRHANDYC.ssl:171) or
+# self-destructed at the force field after "finish your task" (MRHANDYC.ssl:469 -> 232).
+# The three repairs are local vars only. Recruit options exist only while
+# GVAR_ENABLE_MR_HANDY_HIRELING > 0 (fo1_settings.ini, currently 1).
+quest recruit_mr_handy
+  name   Recruit Mr. Handy
+  town   Military Base
+  kind   companion
+  giver  A broken Mr. Handy in the Vats (level 4)
+  unlock GVAR_ENABLE_MR_HANDY_HIRELING >= 1
+  lockhint Disabled in fo1_settings.ini
+  active town AREA_MILITARY_BASE >= 2 | GVAR_MR_HANDYC_HIRELING_STATUS >= 1
+  done   GVAR_MR_HANDYC_HIRELING_STATUS == 1 | party PID_MRHANDYC
+  fail   GVAR_MR_HANDYC_HIRELING_STATUS >= 2 | GVAR_VATS_BLOWN >= 1 & GVAR_MR_HANDYC_HIRELING_STATUS == 0
+
+  step Repair and reprogram the Mr. Handy
+    where  MBVATS12:1
+    target npc SCRIPT_MRHANDYC
+    done   GVAR_MR_HANDYC_HIRELING_STATUS == 1 | party PID_MRHANDYC
+    note   Repair, Science, Repair/Radio; then hack it: IQ 7, Science -30
+    src    MRHANDYC.ssl:582
+
+quest recruit_eyebot
+  name   Recruit the floating eyebot
+  town   Glow
+  kind   companion
+  giver  A broken floating eyebot, Glow level 2
+  unlock GVAR_ENABLE_EYEBOT_HIRELING >= 1
+  lockhint Disabled in fo1_settings.ini
+  active GVAR_MARK_GLOW_2 >= 2 | party PID_EYEBOT
+  done   party PID_EYEBOT
+
+  step Repair the eyebot's sensors
+    where  GLOW1:1
+    target npc SCRIPT_EYEBOT
+    done   GVAR_GLOW_POWER == 2 | party PID_EYEBOT
+    note   Repair -10 (Multi Tool +10) while it is still powered down
+    src    EYEBOT.ssl:442
+
+  step Restore power with the traps still on
+    done   GVAR_GLOW_POWER == 2 & GVAR_GLOW_TRAPS_STATE == 0 | party PID_EYEBOT
+    note   It only wakes up while the power is on and the traps are active
+    src    EYEBOT.ssl:190
+
+  step Tell the eyebot to follow you
+    where  GLOW1:1
+    target npc SCRIPT_EYEBOT
+    done   party PID_EYEBOT
+    note   "Wipe the memory" (IQ 6) or whack it (Luck); outside: fix battery
+    src    EYEBOT.ssl:595

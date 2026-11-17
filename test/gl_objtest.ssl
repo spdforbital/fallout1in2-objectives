@@ -1,0 +1,55 @@
+/*
+   TEST ONLY - not part of the mod. Press Insert to set up the next quest situation
+   (sets quest GVARs in memory, gives items, loads the map). Never save while it is installed.
+*/
+#include "sfall.h"
+#include "dik.h"
+#include "global.h"
+#include "maps.h"
+#include "itempid.h"
+
+procedure start;
+procedure KeyHandler;
+procedure Scenario(variable n);
+
+variable scen := 0;
+
+procedure Scenario(variable n) begin
+   if (n == 1) then begin
+      display_msg("TEST 1: Shady Sands, radscorpion job given");
+      set_global_var(GVAR_RADSCORPION_SEED, 1);
+      load_map(MAP_SHADYW, 0);
+   end else if (n == 2) then begin
+      display_msg("TEST 2: Junktown, hired by Killian to stop Gizmo");
+      set_global_var(GVAR_HIRED_BY_KILLIAN, 1);
+      load_map(MAP_JUNKCSNO, 0);
+   end else if (n == 3) then begin
+      display_msg("TEST 3: Hub, missing caravans job");
+      set_global_var(GVAR_MISSING_CARAVAN, 1);
+      set_global_var(GVAR_MISSING_CARAVANS_STATUS, 1);
+      load_map(MAP_HUBDWNTN, 0);
+   end else if (n == 4) then begin
+      display_msg("TEST 4: carrying the water chip, back in Vault 13");
+      add_obj_to_inven(dude_obj, create_object_sid(PID_WATER_CHIP, 0, 0, -1));
+      load_map(MAP_VAULT13, 0);
+   end else if (n == 5) then begin
+      display_msg("TEST 5: chip returned, Master and Vats given");
+      set_global_var(GVAR_VAULT_WATER, 2);
+      set_global_var(GVAR_QUEST_VAULT13_2_MASTER, 1);
+      set_global_var(GVAR_QUEST_VAULT13_3_KILL_VATS, 1);
+   end
+end
+
+procedure KeyHandler begin
+   variable pressed := get_sfall_arg, key := get_sfall_arg;
+   if (pressed and key == DIK_INSERT and get_game_mode == 0) then begin
+      scen += 1;
+      call Scenario(scen);
+   end
+end
+
+procedure start begin
+   if (game_loaded) then begin
+      register_hook_proc(HOOK_KEYPRESS, KeyHandler);
+   end
+end

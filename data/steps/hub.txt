@@ -1,0 +1,399 @@
+# The Hub -- quest steps (hand-checked against Fo1in2 06hub/*.ssl)
+#
+# NPC locations (from the .MAP files):
+#   HUBDWNTN:0  Butch 14661, Rutger 16461, Beth 22493, Kane 24336, Irwin 29124, Sheriff Greene 24064,
+#               Demetre 12318, Keri 12127, Far Go caravan driver 17265
+#   HUBDWNTN:1  Decker 22923 (Underground hideout)
+#   HUBOLDTN:0  Harold 22942, Slappy 25131, missing Initiate 20344 (captors' house)
+#   HUBOLDTN:1  Loxley 28889 (Thieves' Circle)
+#   HUBHEIGT:0  Hightower 25125, his wife 22314, strongbox 24516
+#   HUBWATER:0  Master Merchant 25083, Water Merchant caravan driver 24109, Jain 13498
+#   DETHCLAW:0  Deathclaw 25741, dying mutant 24740
+#   HUBMIS0:0   Irwin's farm, 7 raiders
+# mvar indices used below: HUBDWNTN 26 CC_WILL_GIVE_JOB, 36 FGT_WILL_GIVE_JOB, 46 DECKER_JOB_STATUS,
+#   47 DECKER_STATUS_JOB2, 52 COPS_IN_HIDEOUT; HUBOLDTN 0 Total_Captors, 10 Once_DeathClaw;
+#   HUBWATER 1 (Master Merchant offered caravan work)
+
+quest hub_missing_caravans
+  name   Find the missing caravans
+  town   Hub
+  kind   optional
+  giver  Butch or Rutger at Far Go Traders
+  pipboy 703
+  order  10
+  # GVAR_MISSING_CARAVAN: 1 = Butch/Rutger/Billy hired you, 2 = solved
+
+  step Ask Beth about the caravan route
+    where  HUBDWNTN:0
+    target npc SCRIPT_HBETH
+    done   GVAR_MISSING_CARAVANS_STATUS >= 2
+    src    HBETH.ssl:660
+
+  step Ask Harold in Old Town about the attacks
+    where  HUBOLDTN:0
+    target npc SCRIPT_HAROLD
+    done   GVAR_MISSING_CARAVANS_STATUS >= 3
+    src    HAROLD.ssl:571
+
+  step Have Slappy lead you to the Deathclaw lair
+    where  HUBOLDTN:0
+    target npc SCRIPT_SLAPPY
+    done   map MAP_DETHCLAW | mvar MAP_HUBOLDTN 10 >= 1 | GVAR_MISSING_CARAVANS_STATUS >= 5
+    note   With satellite locations on he marks the lair on the world map
+    src    SLAPPY.ssl:198
+
+  step Talk to the dying mutant in the lair
+    where  DETHCLAW:0
+    target npc SCRIPT_DCMUTANT
+    done   GVAR_MISSING_CARAVAN >= 2
+    note   Talking to him solves the case; he dies right after
+    src    DCMUTANT.ssl:105
+
+  step Convince Butch it wasn't the Deathclaw
+    alt
+    where  HUBDWNTN:0
+    target npc SCRIPT_BUTCH
+    done   mvar MAP_HUBDWNTN 41 >= 3 | GVAR_MISSING_CARAVAN >= 2
+    note   Needs the mutant's evidence, or Speech for the "big rats" story
+    src    BUTCH.ssl:641
+
+quest hub_deathclaw
+  name   Find and destroy the Deathclaw
+  town   Hub
+  kind   optional
+  lockhint Take Far Go's missing caravan job first
+  parent hub_missing_caravans
+  unlock GVAR_MISSING_CARAVANS_STATUS >= 1
+  giver  Beth or Harold in the Hub
+  pipboy 700
+  order  20
+  # GVAR_KILL_DEATHCLAW: 1 = Beth/Harold told you, 2 = Deathclaw dead
+
+  step Ask Harold in Old Town about the Deathclaw
+    where  HUBOLDTN:0
+    target npc SCRIPT_HAROLD
+    done   GVAR_MISSING_CARAVANS_STATUS >= 3
+    note   Harold only talks about it after Beth sent you (caravan job)
+    src    HAROLD.ssl:571
+
+  step Have Slappy lead you to the Deathclaw lair
+    where  HUBOLDTN:0
+    target npc SCRIPT_SLAPPY
+    done   map MAP_DETHCLAW | mvar MAP_HUBOLDTN 10 >= 1 | GVAR_KILL_DEATHCLAW >= 2
+    note   With satellite locations on he marks the lair on the world map
+    src    SLAPPY.ssl:198
+
+  step Kill the Deathclaw
+    where  DETHCLAW:0
+    target npc SCRIPT_DETHCLAW
+    done   GVAR_KILL_DEATHCLAW >= 2
+    src    GENERIC/DETHCLAW.ssl:41
+
+quest hub_kill_merchant
+  name   Dispose of merchant
+  town   Hub
+  kind   optional
+  giver  Decker (ask Kane at the Maltese Falcon)
+  pipboy 702
+  order  30
+  # Decker's job. The Pip-Boy entry only turns to 2 when Decker dies (DECKER.ssl:159),
+  # so the quest also counts as done once Kane paid (DECKER_JOB_STATUS >= 5).
+  done   GVAR_QUEST_PIPBOY_HIGHTOWER >= 2 | mvar MAP_HUBDWNTN 46 >= 5
+
+  step Kill Daren Hightower
+    where  HUBHEIGT:0
+    target npc SCRIPT_HIGHTOWR
+    done   GVAR_HIGHTOWER_STATUS >= 1
+    src    HIGHTOWR.ssl:131
+
+  step Kill Hightower's wife
+    where  HUBHEIGT:0
+    target npc SCRIPT_HTWRWIFE
+    done   GVAR_KILL_MERCHANT == 2
+    note   The job counts once both Hightowers are dead
+    src    HTWRWIFE.ssl:115
+
+  step Collect your payment from Kane
+    where  HUBDWNTN:0
+    target npc SCRIPT_KANE
+    done   mvar MAP_HUBDWNTN 46 >= 5
+    src    KANE.ssl:838
+
+  step Get Decker killed instead
+    alt
+    where  HUBDWNTN:1
+    target npc SCRIPT_DECKER
+    done   GVAR_DECKER_STATUS >= 1
+    note   Reporting him to Sheriff Greene also ends the job
+    src    DECKER.ssl:159
+
+quest hub_kill_jain
+  name   Dispose of Jain
+  town   Hub
+  kind   optional
+  lockhint Finish Decker's first job
+  parent hub_kill_merchant
+  unlock GVAR_KILL_MERCHANT == 2
+  giver  Decker, after the Hightower job
+  pipboy 701
+  order  40
+  # Given by Decker (Pip-Boy gvar) or by Kane when paying the first job (KANE.ssl:852, KILL_JAIN only).
+  active GVAR_QUEST_PIPBOY_JAIN >= 1 | GVAR_KILL_JAIN == 1 | GVAR_SLIDE_KILLED_JAIN_JOB == 1
+  done   GVAR_QUEST_PIPBOY_JAIN >= 2 | mvar MAP_HUBDWNTN 47 >= 6
+
+  step Kill Jain at the Children's chapel
+    where  HUBWATER:0
+    target npc SCRIPT_JAIN
+    done   GVAR_KILL_JAIN == 2
+    src    JAIN.ssl:140
+
+  step Collect your payment from Kane
+    where  HUBDWNTN:0
+    target npc SCRIPT_KANE
+    done   mvar MAP_HUBDWNTN 47 >= 6
+    src    KANE.ssl:894
+
+  step Get Decker killed instead
+    alt
+    where  HUBDWNTN:1
+    target npc SCRIPT_DECKER
+    done   GVAR_DECKER_STATUS >= 1
+    note   Reporting him to Sheriff Greene also ends the job
+    src    DECKER.ssl:159
+
+quest hub_decker
+  name   Dispose of Decker
+  town   Hub
+  kind   optional
+  lockhint Hear Decker's job offer first
+  parent hub_kill_merchant
+  unlock mvar MAP_HUBDWNTN 46 >= 1
+  giver  Sheriff Justin Greene, Hub
+  order  50
+  # No Pip-Boy entry. Sheriff Greene acts once Decker offered you a job.
+  active GVAR_QUEST_PIPBOY_HIGHTOWER >= 1 | GVAR_QUEST_PIPBOY_JAIN >= 1 | mvar MAP_HUBDWNTN 46 >= 1 | GVAR_DECKER_STATUS >= 1
+  done   GVAR_DECKER_STATUS >= 1
+
+  step Report Decker's job to Sheriff Greene
+    where  HUBDWNTN:0
+    target npc SCRIPT_JUSTIN
+    done   mvar MAP_HUBDWNTN 52 >= 1
+    note   Greene takes you and his deputies to Decker's hideout
+    src    JUSTIN.ssl:526
+
+  step Kill Decker in the Underground hideout
+    where  HUBDWNTN:1
+    target npc SCRIPT_DECKER
+    done   GVAR_DECKER_STATUS >= 1
+    src    DECKER.ssl:152
+
+quest hub_thieves_circle
+  name   Join the Thieves' Circle
+  town   Hub
+  kind   optional
+  giver  Loxley in Old Town (Thieves' Circle)
+  order  60
+  # No Pip-Boy entry. Loxley sets LOXLEY_KNOWN when you talk to him; joining starts the necklace job.
+  active GVAR_LOXLEY_KNOWN >= 1 | GVAR_STEAL_NECKLACE >= 1
+  done   GVAR_STEAL_NECKLACE >= 1
+
+  step Accept Loxley's initiation test
+    where  HUBOLDTN:1
+    target npc SCRIPT_LOXLEY
+    done   GVAR_STEAL_NECKLACE >= 1
+    src    LOXLEY.ssl:326
+
+quest hub_steal_necklace
+  name   Steal necklace from Merchants
+  town   Hub
+  kind   optional
+  fail   GVAR_STEAL_NECKLACE >= 2 & mvar MAP_HUBOLDTN 3 == 0
+  done   mvar MAP_HUBOLDTN 3 >= 1
+  lockhint Ask Loxley to join the Circle first
+  parent hub_thieves_circle
+  unlock GVAR_STEAL_NECKLACE >= 1
+  giver  Loxley, Thieves' Circle
+  pipboy 704
+  order  61
+
+  step Steal the necklace from Hightower's house
+    where  HUBHEIGT:0
+    target item PID_NECKLACE
+    done   item PID_NECKLACE | GVAR_STEAL_NECKLACE >= 2
+    note   It is in the strongbox in the Hightower house in the Heights
+
+  step Bring the necklace to Loxley
+    where  HUBOLDTN:1
+    target npc SCRIPT_LOXLEY
+    done   mvar MAP_HUBOLDTN 3 >= 1
+    note   Telling him you quit also ends the job, but without the reward
+    src    LOXLEY.ssl:694
+
+quest hub_irwin_farm
+  name   Clear Irwin's farm of raiders
+  town   Hub
+  kind   optional
+  lockhint Irwin asks once you are level 5
+  giver  Irwin, farmer in the Hub (from level 5)
+  pipboy 711
+  order  70
+  # 1 = accepted, 2 = all raiders dead (Pip-Boy done), 501 = rewarded. Done kept at 501 for the reward step.
+  done   GVAR_IRWIN_FARM_STATUS >= 501
+
+  step Go to Irwin's farm
+    done   map MAP_HUBMIS0 | GVAR_IRWIN_FARM_STATUS >= 2
+    note   Irwin takes you there (or marks it on the world map)
+
+  step Kill the raiders on Irwin's farm
+    where  HUBMIS0:0
+    target npc SCRIPT_FARMRAID
+    count  PID_MERC_FEMALE_LEATHER,PID_MERCENARY_HMLTHR,PID_MERCENARY,PID_MERC_MALE_LEATHER,PID_MERCENARY_NMLTHR
+    done   GVAR_IRWIN_FARM_STATUS >= 2
+    note   7 raiders
+    src    FARMRAID.ssl:66
+
+  step Tell Irwin his farm is clear
+    where  HUBDWNTN:0
+    target npc SCRIPT_IRWIN
+    done   GVAR_IRWIN_FARM_STATUS >= 501
+    src    IRWIN.ssl:193
+
+quest hub_rescue_initiate
+  name   Rescue Initiate from the Hub
+  town   Hub
+  kind   optional
+  lockhint Become a Brotherhood initiate first
+  parent bos_become_initiate
+  unlock GVAR_QUEST_BROHOOD_1_JOIN_THEM == 2
+  giver  Talus at the Brotherhood
+  pipboy 801
+  order  80
+  # Given by Talus (TALUS.ssl:501). 2 = Initiate freed, 5 = Initiate dead.
+  done   GVAR_QUEST_BROHOOD_2_FIND_LOST == 2
+  fail   GVAR_QUEST_BROHOOD_2_FIND_LOST == 5
+
+  step Kill the Initiate's captors in Old Town
+    where  HUBOLDTN:0
+    target npc SCRIPT_HUBCAPTR
+    done   mvar MAP_HUBOLDTN 0 >= 4 | GVAR_QUEST_BROHOOD_2_FIND_LOST >= 2
+    note   Four Underground thugs guard him in a house; Harold has hints
+    src    HUBCAPTR.ssl:102
+
+  step Talk to the captive Initiate
+    where  HUBOLDTN:0
+    target npc SCRIPT_MISSBRO
+    done   GVAR_QUEST_BROHOOD_2_FIND_LOST >= 2
+    note   Afterwards report to Talus at the Brotherhood
+    src    MISSBRO.ssl:119
+
+quest hub_water_vault13
+  name   Send water to Vault 13
+  town   Hub
+  kind   optional
+  lockhint Only before the water chip is back
+  unlock GVAR_VAULT_WATER < 2
+  parent waterchip
+  giver  Master Merchant, Water Merchants
+  order  90
+  # No Pip-Boy entry. GVAR_VAULT_WATER: 1 = water caravan bought, 2 = water chip returned.
+  active town AREA_HUB >= 2 & GVAR_VAULT_WATER == 0 | GVAR_VAULT_WATER == 1
+  done   GVAR_VAULT_WATER == 1
+
+  step Go to the Water Merchants
+    where  HUBWATER
+    done   map MAP_HUBWATER | GVAR_VAULT_WATER >= 1
+    src    99map/HUBWATER.ssl:22
+
+  step Pay the Master Merchant to ship water
+    where  HUBWATER:0
+    target npc SCRIPT_MSTMERCH
+    done   GVAR_VAULT_WATER >= 1
+    note   2000 caps (Barter lowers it); +100 water days, mutants come sooner
+    src    MSTMERCH.ssl:304
+
+quest hub_guard_water
+  name   Guard a Water Merchants caravan
+  town   Hub
+  kind   optional
+  repeatable 
+  giver  Master Merchant, Water Merchants
+  order  100
+  # Repeatable. WATER_JOB: 1 = left with caravan, 3 = abandoned, 4 = arrived, 5 = lost, 6 = reset.
+  active mvar MAP_HUBWATER 1 >= 1 | GVAR_WATER_JOB >= 1 & GVAR_WATER_JOB <= 5
+  done   GVAR_WATER_JOB == 4
+  fail   GVAR_WATER_JOB == 3 | GVAR_WATER_JOB == 5
+
+  step Ask the Master Merchant for work
+    where  HUBWATER:0
+    target npc SCRIPT_MSTMERCH
+    done   mvar MAP_HUBWATER 1 >= 1 | GVAR_WATER_JOB >= 1 & GVAR_WATER_JOB <= 5
+    src    MSTMERCH.ssl:154
+
+  step Leave with the caravan on its departure day
+    where  HUBWATER:0
+    target npc SCRIPT_WMCARVN
+    done   GVAR_WATER_JOB >= 1 & GVAR_WATER_JOB <= 5
+    src    WMCARVN.ssl:632
+
+  step Protect the caravan until it arrives
+    done   GVAR_WATER_JOB == 4
+    src    encounter/CARVLEAD.ssl:253
+
+quest hub_guard_fargo
+  name   Guard a Far Go Traders caravan
+  town   Hub
+  kind   optional
+  repeatable 
+  lockhint Prove who took Far Go's caravans
+  parent hub_missing_caravans
+  unlock GVAR_DCMUTANT_GAVE_DISK > 0 | GVAR_HOLODISK_MUTANT == 1
+  giver  Rutger, Far Go Traders
+  order  101
+  # Repeatable. FARGO_JOB: 1 = left with caravan, 3 = abandoned, 4 = arrived, 5 = lost, 6 = reset.
+  active mvar MAP_HUBDWNTN 36 >= 1 | GVAR_FARGO_JOB >= 1 & GVAR_FARGO_JOB <= 5
+  done   GVAR_FARGO_JOB == 4
+  fail   GVAR_FARGO_JOB == 3 | GVAR_FARGO_JOB == 5
+
+  step Show Rutger the mutants' holodisk
+    where  HUBDWNTN:0
+    target npc SCRIPT_RUTGER
+    done   mvar MAP_HUBDWNTN 36 >= 1 | GVAR_FARGO_JOB >= 1 & GVAR_FARGO_JOB <= 5
+    src    RUTGER.ssl:712
+
+  step Leave with the caravan on its departure day
+    where  HUBDWNTN:0
+    target npc SCRIPT_FGTCARVN
+    done   GVAR_FARGO_JOB >= 1 & GVAR_FARGO_JOB <= 5
+    src    FGTCARVN.ssl:667
+
+  step Protect the caravan until it arrives
+    done   GVAR_FARGO_JOB == 4
+    src    encounter/CARVLEAD.ssl:276
+
+quest hub_guard_crimson
+  name   Guard a Crimson Caravan
+  town   Hub
+  kind   optional
+  repeatable 
+  giver  Demetre, Crimson Caravan
+  order  102
+  # Repeatable. CC_JOB: 1 = left with caravan, 3 = abandoned, 4 = arrived, 5 = lost, 6 = reset.
+  active mvar MAP_HUBDWNTN 26 >= 1 | GVAR_CC_JOB >= 1 & GVAR_CC_JOB <= 5
+  done   GVAR_CC_JOB == 4
+  fail   GVAR_CC_JOB == 3 | GVAR_CC_JOB == 5
+
+  step Ask Demetre for caravan guard work
+    where  HUBDWNTN:0
+    target npc SCRIPT_DEMETRE
+    done   mvar MAP_HUBDWNTN 26 >= 1 | GVAR_CC_JOB >= 1 & GVAR_CC_JOB <= 5
+    src    DEMETRE.ssl:214
+
+  step Leave with Keri's caravan on departure day
+    where  HUBDWNTN:0
+    target npc SCRIPT_KERI
+    done   GVAR_CC_JOB >= 1 & GVAR_CC_JOB <= 5
+    src    KERI.ssl:729
+
+  step Protect the caravan until it arrives
+    done   GVAR_CC_JOB == 4
+    src    encounter/CARVLEAD.ssl:297

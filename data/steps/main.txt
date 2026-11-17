@@ -1,0 +1,181 @@
+# Main quest line (Vault 13 water chip, the Master, the Vats).
+# Hand-checked against the Fo1in2 script sources and the fo1_base maps
+# (tiles = object hexes read from mods/fo1_base/maps/*.MAP).
+#
+# Water chip GVAR_VAULT_WATER: 0 = searching, 1 = water caravan bought at the Hub (MSTMERCH.ssl:304),
+# 2 = chip handed to the Overseer (OVER.ssl:575, over28).
+# The intro movie is the Overseer's briefing; the game starts in the Vault 13 cave with Vault 15
+# already marked on the world map (V13CAVE.ssl:95). There is no GVAR for the briefing itself.
+
+quest waterchip
+  name   Find the water chip
+  town   Vault 13
+  kind   main
+  giver  The Overseer, Vault 13 (game start)
+  pipboy 100
+  order  1
+
+  step Go to Vault 15 (marked on your map)
+    where  VAULTENT
+    target tile 19513:0
+    done   GVAR_QUEST_VAULT15_1_SEARCH_FOR_CLUES >= 1 | town AREA_NECROPOLIS >= 2 | GVAR_NECROP_WATER_CHIP_TAKEN >= 1 | item PID_WATER_CHIP | GVAR_VAULT_WATER >= 2
+    note   The ladder in the shack leads down into the buried vault
+    src    VAULTENT.ssl:24
+
+  step Search the bottom level of Vault 15
+    where  VAULTBUR:2
+    target tile 23099:2,22701:2
+    done   GVAR_QUEST_VAULT15_2_FIND_WATER_CHIP >= 2 | town AREA_NECROPOLIS >= 2 | GVAR_NECROP_WATER_CHIP_TAKEN >= 1 | item PID_WATER_CHIP | GVAR_VAULT_WATER >= 2
+    note   Two broken elevator shafts need a rope each; the chip room is buried
+    src    RUBCHIP.ssl:29
+
+  step Optional: buy water caravans in the Hub
+    where  HUBWATER
+    target npc SCRIPT_MSTMERCH
+    show   GVAR_NECROP_WATER_CHIP_TAKEN == 0 & noitem PID_WATER_CHIP
+    done   GVAR_VAULT_WATER >= 1
+    note   Water Merchants: +100 water days, but mutants find Vault 13 sooner
+    src    MSTMERCH.ssl:304
+
+  step Find Necropolis
+    where  HOTEL,HALLDED
+    done   town AREA_NECROPOLIS >= 2 | GVAR_NECROP_WATER_CHIP_TAKEN >= 1 | item PID_WATER_CHIP | GVAR_VAULT_WATER >= 2
+    note   Killian (Junktown) or Butch, Mat, Keri, Water Merchants (Hub) mark it
+    src    HOTELMAP.ssl:61
+
+  step Take the Watershed manhole to the vault
+    where  WATRSHD:1,WATRSHD:0
+    target tile 15872:1,20053:0
+    done   map MAP_VAULTNEC | GVAR_NECROP_WATER_CHIP_TAKEN >= 1 | item PID_WATER_CHIP | GVAR_VAULT_WATER >= 2
+    note   Manhole at the Watershed leads to the sewer, a second one to the vault
+
+  step Take the chip from the water computer
+    where  VAULTNEC:2
+    target tile 25270:2
+    done   GVAR_NECROP_WATER_CHIP_TAKEN == 1 | item PID_WATER_CHIP | GVAR_VAULT_WATER >= 2
+    note   Use or Repair the computer on the vault's lowest level; Science helps
+    src    NH2OCOMP.ssl:120
+
+  step Bring the water chip to the Overseer
+    where  VAULT13:2
+    target npc SCRIPT_OVER
+    done   GVAR_VAULT_WATER >= 2
+    src    OVER.ssl:575
+
+
+# GVAR_QUEST_VAULT13_2_MASTER: Overseer sets 1 (OVER.ssl:674, over42 after the chip is returned;
+# over66 if the Vats went first), 2 when the Master dies or arms the bomb (MASTER.ssl:228/462, RAE.ssl:162).
+# The Pip-Boy shows "done" at 2; here the quest is done when the Cathedral is blown
+# (GVAR_MASTER_BLOWN_CUTSCENE, set on the world map after escaping: gl_fo1mechanics.ssl:152).
+
+quest master
+  name   Destroy the Master
+  town   Cathedral
+  kind   main
+  lockhint After returning the water chip
+  parent waterchip
+  unlock GVAR_VAULT_WATER >= 2 | GVAR_QUEST_VAULT13_2_MASTER >= 1
+  giver  The Overseer, after the water chip
+  pipboy 103
+  done   GVAR_MASTER_BLOWN_CUTSCENE >= 1
+  order  2
+
+  step Find the Cathedral near the Boneyard
+    where  CHILDRN1:0
+    target tile 17099:0
+    done   town AREA_CATHEDRAL >= 2 | GVAR_WORLDMAPLIST_MASTERS_LAIR >= 2 | map MAP_CHILDRN1 | map MAP_CHILDRN2 | GVAR_MASTER_BLOWN >= 1
+    note   Nicole (Followers, Boneyard) or Katja can mark it on your map
+
+  step Take the cellar stairs to the Master's vault
+    where  CHILDRN1:1
+    target tile 12104:1
+    done   GVAR_WORLDMAPLIST_MASTERS_LAIR >= 2 | map MAP_MSTRLR12 | map MAP_MSTRLR34 | GVAR_MASTER_BLOWN >= 1
+    note   Cellar doors need the red / black COC badge or lockpicking
+    src    MASTER1.ssl:35
+
+  step Kill the Master
+    where  MSTRLR34:0
+    target npc SCRIPT_MASTER
+    done   GVAR_MASTER_BLOWN >= 1
+    note   The Master is on vault level 3
+    src    MASTER.ssl:227
+
+  step Arm the nuke on the level below
+    alt
+    where  MSTRLR34:1
+    done   GVAR_MASTER_BLOWN >= 1
+    note   Disarming it again resets the countdown
+    src    MVCOMP.ssl:155
+
+  step Escape before the vault explodes
+    where  MSTRLR34,MSTRLR12,CHILDRN1
+    show   GVAR_MASTER_BLOWN >= 1
+    done   GVAR_MASTER_BLOWN_CUTSCENE >= 1
+    note   Get out to the world map before the countdown ends
+    src    gl_fo1mechanics.ssl:152
+
+
+# GVAR_QUEST_VAULT13_3_KILL_VATS: Overseer sets 1 (OVER.ssl:673; over60 if the Master went first),
+# 2 when the vats self-destruct is started (VCONCOMP.ssl:101). Done here when the base has blown
+# (GVAR_VATS_BLOWN_CUTSCENE_DONE, gl_fo1mechanics.ssl:176).
+# The base location has no GVAR: Maxson's "scout the north" job (GVAR_SCOUTED_NORTH_BRO, completed
+# on entering MBENT, MBENT.ssl:32) or the Master's terminal (MSTRCOMP.ssl:58) point the way.
+
+quest vats
+  name   Destroy the Vats
+  town   Military Base
+  kind   main
+  lockhint After returning the water chip
+  parent waterchip
+  unlock GVAR_VAULT_WATER >= 2 | GVAR_QUEST_VAULT13_3_KILL_VATS >= 1
+  giver  The Overseer, after the water chip
+  pipboy 104
+  done   GVAR_VATS_BLOWN_CUTSCENE_DONE >= 1
+  order  3
+
+  step Find the Military Base in the north-west
+    where  MBENT
+    target tile 21271:0
+    done   town AREA_MILITARY_BASE >= 2 | GVAR_SCOUTED_NORTH_BRO == 2 | GVAR_MBASE_DOOR_HOLODISK >= 2 | map MAP_MBENT | map MAP_MBSTRG12 | map MAP_MBVATS12 | GVAR_VATS_BLOWN >= 1 | GVAR_ENTERING_VATS_HOW >= 1
+    note   Maxson's scouting job (Brotherhood) sends you there
+    src    MBENT.ssl:32
+
+  step Open the base door
+    where  MBENT:0
+    target tile 21271:0
+    done   GVAR_MBASE_DOOR_HOLODISK >= 2 | map MAP_MBSTRG12 | map MAP_MBVATS12 | GVAR_ENTERING_VATS_HOW >= 1 | GVAR_VATS_BLOWN >= 1
+    note   The mutant guard carries the door code holodisk; or pick the lock
+    src    MBOUT2IN.ssl:49
+
+  step Get taken to the Vats as a prisoner
+    alt
+    done   GVAR_ENTERING_VATS_HOW >= 1
+    note   Volunteer to Harry (Necropolis) or Troy (Hub) to be "dipped"
+    src    HARRY.ssl:603
+
+  step Get down to the vats levels
+    where  MBSTRG12
+    done   map MAP_MBVATS12 | GVAR_ENTER_MBVATS_ELEV_0 >= 1 | GVAR_VATS_BLOWN >= 1
+    src    MBVATS.ssl:74
+
+  step Turn off the force fields
+    where  MBVATS12:1
+    target tile 12918:1
+    show   GVAR_MBASE_FORCE_FIELD_STATE == 1
+    done   GVAR_MBASE_FORCE_FIELD_STATE == 0 | GVAR_VATS_BLOWN >= 1
+    note   Only while the base is on alert; force field computer on vats level 2
+    src    FORCCOMP.ssl:35
+
+  step Overload the vats control computer
+    where  MBVATS12:1
+    target tile 12325:1
+    done   GVAR_VATS_BLOWN >= 1
+    note   Science; the Lieutenant's codes holodisk helps. Explosives work too
+    src    VCONCOMP.ssl:100
+
+  step Escape before the base explodes
+    where  MBVATS12,MBSTRG12,MBENT
+    show   GVAR_VATS_BLOWN >= 1
+    done   GVAR_VATS_BLOWN_CUTSCENE_DONE >= 1
+    note   Get out to the world map before the countdown ends
+    src    gl_fo1mechanics.ssl:176

@@ -1,0 +1,9 @@
+# third-party sources and tools (see tools/fetch_vendor.sh and README)
+vendor/
+tools/bin/
+# build output
+build/
+dist/
+__pycache__/
+*.pyc
+test/*.int

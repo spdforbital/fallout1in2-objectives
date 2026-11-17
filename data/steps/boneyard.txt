@@ -1,0 +1,260 @@
+# Boneyard (Los Angeles)
+
+quest boneyard_become_blade
+  name   Become a Blade
+  town   Boneyard
+  kind   optional
+  lockhint Cut from Fo1in2 - cannot be done
+  unlock false
+  active false
+  pipboy 1100
+  order  10
+
+  # Coarse: GVAR_QUEST_BONEYARD_1_ME_BLADE is only read, never set, by the
+  # fo1in2 scripts, so this quest never appears in the Pip-Boy.
+  step Become a member of the Blades
+    where  LABLADES
+    target npc SCRIPT_RAZOR
+    done   GVAR_QUEST_BONEYARD_1_ME_BLADE >= 2
+
+quest boneyard_romero_locket
+  name   Deliver Romero's locket
+  town   Boneyard
+  kind   optional
+  lockhint Cut from Fo1in2 - cannot be done
+  unlock false
+  active false
+  pipboy 1101
+  order  20
+
+  # Unreachable: Romero07 (the locket, ROMERO.ssl:114) needs ME_BLADE == 2, which nothing sets.
+  step Get the locket from Romero
+    where  LABLADES
+    target npc SCRIPT_ROMERO
+    done   GVAR_QUEST_BONEYARD_2_ROMERO >= 1
+    src    ROMERO.ssl:244
+
+  step Give the locket to Julianna in Adytum
+    where  LAADYTUM
+    target npc SCRIPT_JULIANNA
+    done   GVAR_QUEST_BONEYARD_2_ROMERO >= 2
+    note   Carry the gold locket (PID_GOLD_LOCKET)
+    src    JULIANNA.ssl:196
+
+quest boneyard_followers_package
+  name   Deliver the Gun Runners package
+  town   Boneyard
+  kind   optional
+  lockhint Cut from Fo1in2 - cannot be done
+  unlock false
+  active false
+  pipboy 1102
+  order  30
+
+  # Coarse: cut content. Nothing sets the GVAR to 1 and no briefcase is placed;
+  # FOLLMAP sets 2 if you enter the Followers carrying a briefcase and leave without it.
+  step Leave the briefcase at the Followers
+    where  LAFOLLWR
+    done   GVAR_QUEST_BONEYARD_3_BOMBFOLL >= 2
+    note   Briefcase (PID_BRIEFCASE) must be dropped inside the Followers' map
+    src    FOLLMAP.ssl:81
+
+quest boneyard_find_spy
+  name   Find the Children's spy
+  town   Boneyard
+  kind   optional
+  lockhint Cut from Fo1in2 - cannot be done
+  unlock false
+  active false
+  pipboy 1103
+  order  40
+
+  # Neil, Jake and Peter set it to 1 (NEIL.ssl:157, JAKE.ssl:187, PETER.ssl:120), but only
+  # Heather's destroy_p_proc completes it and Heather is cut (deletes herself on load).
+  step Expose the spy among the Followers
+    where  LAFOLLWR
+    target npc SCRIPT_HEATHER
+    done   GVAR_QUEST_BONEYARD_4_FIND_SPY >= 2
+    note   The spy, Heather, is cut in fo1in2; may not be completable
+    src    HEATHER.ssl:104
+
+quest boneyard_fix_farm
+  name   Fix the Adytum farm
+  town   Boneyard
+  kind   optional
+  done   GVAR_QUEST_BONEYARD_5_FIX_FARM >= 9304
+  lockhint Reach the Boneyard first
+  unlock town AREA_BONEYARD >= 2
+  giver  Miles in Adytum
+  pipboy 1104
+  order  50
+
+  step Find the hydroponic farm parts
+    where  LARIPPER
+    target item PID_FARM_PARTS
+    done   item PID_FARM_PARTS | GVAR_QUEST_BONEYARD_5_FIX_FARM >= 9302
+    note   A container in the deathclaw lair holds the parts
+
+  step Show the parts to Miles in Adytum
+    where  LAADYTUM
+    target npc SCRIPT_MILES
+    done   GVAR_QUEST_BONEYARD_5_FIX_FARM >= 9302
+    src    MILES.ssl:299
+
+  step Have Smitty repair the parts
+    where  LAADYTUM
+    target npc SCRIPT_SMITTY
+    done   GVAR_QUEST_BONEYARD_5_FIX_FARM >= 9303
+    note   Repaired parts get a better reward from Miles
+    src    SMITTY.ssl:292
+
+  step Give the parts to Miles unrepaired
+    alt
+    where  LAADYTUM
+    target npc SCRIPT_MILES
+    done   GVAR_QUEST_BONEYARD_5_FIX_FARM >= 9304
+    src    MILES.ssl:319
+
+  step Give the repaired parts to Miles
+    where  LAADYTUM
+    target npc SCRIPT_MILES
+    done   GVAR_QUEST_BONEYARD_5_FIX_FARM >= 9304
+    src    MILES.ssl:319
+
+quest boneyard_rescue_jason
+  name   Rescue Jason Zimmermann
+  town   Boneyard
+  kind   optional
+  lockhint Cut from Fo1in2 - cannot be done
+  unlock false
+  active false
+  pipboy 1105
+  order  60
+
+  # Coarse: GVAR_QUEST_BONEYARD_6_JASON is never set; JASON.ssl says
+  # "unused, Jason Zimmerman is dead". Never appears in the Pip-Boy.
+  step Rescue Jason Zimmermann
+    done   GVAR_QUEST_BONEYARD_6_JASON >= 2
+
+quest boneyard_stop_gangs
+  name   Stop the gangs attacking Adytum
+  town   Boneyard
+  kind   optional
+  done   GVAR_QUEST_KILL_RAZOR >= 2 | GVAR_BLADES_STATUS == 2
+  lockhint Reach the Boneyard first
+  unlock town AREA_BONEYARD >= 2
+  giver  Zimmermann in Adytum
+  pipboy 1106
+  order  70
+
+  # Zimmermann gives the task (JON.ssl:303). Completed when Razor dies or
+  # when the Blades' attack on the Regulators in Adytum is over.
+  step Kill Razor, leader of the Blades
+    where  LABLADES
+    target npc SCRIPT_RAZOR
+    done   GVAR_QUEST_KILL_RAZOR >= 2
+    src    RAZOR.ssl:213
+
+  step Help the Blades beat the Regulators
+    alt
+    where  LAADYTUM
+    target npc SCRIPT_RAZOR
+    done   GVAR_QUEST_KILL_RAZOR >= 2 | GVAR_BLADES_STATUS == 2
+    note   Get the Blades armed; they attack with or without you
+    src    LAADYTUM.ssl:128
+
+  step Show Zimmermann the Regulator holodisk
+    alt
+    where  LAADYTUM
+    target npc SCRIPT_JON
+    done   GVAR_ZIMMERMAN_STATUS == 9003 | GVAR_BLADES_STATUS == 2
+    note   Turns Adytum against the Regulators
+    src    JON.ssl:407
+
+quest boneyard_mother_deathclaw
+  name   Kill the Mother Deathclaw
+  town   Boneyard
+  kind   optional
+  lockhint Reach the Boneyard first
+  unlock town AREA_BONEYARD >= 2
+  giver  Gabriel at the Gun Runners
+  pipboy 1107
+  order  80
+
+  step Talk to Gabriel at the Gun Runners
+    where  LAGUNRUN
+    target npc SCRIPT_GABRIEL
+    done   GVAR_QUEST_KILL_MOMCLAW >= 1
+    src    GABRIEL.ssl:232
+
+  # MVAR 0 of LARIPPER = mother deathclaw dead
+  step Kill the Mother Deathclaw in the lair
+    where  LARIPPER:1
+    target npc SCRIPT_MOMCLAW
+    done   mvar MAP_LARIPPER 0 == 1 | GVAR_QUEST_KILL_MOMCLAW >= 2
+    src    MOMCLAW.ssl:30
+
+  step Kill all deathclaws and eggs, then leave
+    where  LARIPPER
+    count  PID_DEATHCLAW,PID_DEATHCLAW_SMALL,PID_DEATHCLAW_EGG
+    done   GVAR_QUEST_KILL_MOMCLAW >= 2
+    note   Checked when you leave the lair map
+    src    LARIPPER.ssl:76
+
+quest boneyard_arm_blades
+  name   Get Gun Runner arms for Blades
+  town   Boneyard
+  kind   optional
+  lockhint Reach the Boneyard first
+  unlock town AREA_BONEYARD >= 2
+  giver  Razor, leader of the Blades
+  pipboy 1108
+  order  90
+
+  # Razor starts it (RAZOR.ssl:321). Completes when Gabriel arms the Blades,
+  # when he arms you instead, or when Razor dies.
+  step Kill the deathclaws for the Gun Runners
+    where  LARIPPER
+    count  PID_DEATHCLAW_MOTHER,PID_DEATHCLAW,PID_DEATHCLAW_SMALL,PID_DEATHCLAW_EGG
+    done   GVAR_DEATHCLAWS_KILLED >= 2 | GVAR_QUEST_BLADE_WEAPONS >= 2
+    note   Gabriel wants the deathclaw lair cleared first
+    src    LARIPPER.ssl:76
+
+  step Have Gabriel send the weapons to the Blades
+    where  LAGUNRUN
+    target npc SCRIPT_GABRIEL
+    done   GVAR_QUEST_BLADE_WEAPONS >= 2
+    src    GABRIEL.ssl:347
+
+  step Kill Razor instead
+    alt
+    where  LABLADES
+    target npc SCRIPT_RAZOR
+    done   GVAR_QUEST_KILL_RAZOR >= 2
+    note   Taking the guns for yourself (Gabriel) also ends this job
+    src    RAZOR.ssl:214
+
+quest boneyard_kill_harry
+  name   Kill the mutant leader
+  town   Boneyard
+  kind   optional
+  lockhint Reach the Boneyard first
+  unlock town AREA_BONEYARD >= 2
+  giver  Talius at the Followers
+  pipboy 1109
+  order  100
+
+  # Talius gives the quest (TALIUS.ssl:303).
+  step Kill Harry's mutants at the Watershed
+    where  WATRSHD:1
+    target npc SCRIPT_HARRY
+    count  PID_HARRY,PID_SUPER_MUTANT
+    done   GVAR_NECROP_MUTANTS_KILLED >= 2 | GVAR_QUEST_KILL_HARRY >= 2
+    note   Harry leads the mutants at the Necropolis Watershed
+    src    HARRY.ssl:610
+
+  step Report back to Talius
+    where  LAFOLLWR
+    target npc SCRIPT_TALIUS
+    done   GVAR_QUEST_KILL_HARRY >= 2
+    src    TALIUS.ssl:360

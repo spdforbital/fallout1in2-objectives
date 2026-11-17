@@ -1,0 +1,58 @@
+# Vault 15 optional quests.
+# Both GVARs are set to 1 on the first visit (VAULTENT.ssl:24-25) and to 2 by the spatial
+# script in the rubble on the bottom level (RUBCHIP.ssl:28-29).
+# quests.txt lists 1368 (rope), 1369 (hidden items), 1370 (rats) commented out and all with line 201
+# (QUESTS.msg has them as 202-204); no script ever sets these GVARs, so they are skipped.
+# Tiles read from mods/fo1_base/maps/VAULTENT.MAP and VAULTBUR.MAP (VAULTBUR elev 0/1/2 = levels 1/2/3).
+# The two broken elevator shafts (BVELV1W.ssl, BVELV2E.ssl) each take a rope (PID_ROPE);
+# no GVAR records using them, so those steps tick off together with the search.
+
+quest vault15_clues
+  name   Search for clues
+  town   Vault 15
+  kind   optional
+  parent waterchip
+  giver  Arriving at Vault 15
+  pipboy 200
+  order  1
+
+  step Climb down the ladder in the shack
+    where  VAULTENT:0
+    target tile 19513:0
+    done   map MAP_VAULTBUR | GVAR_QUEST_VAULT15_1_SEARCH_FOR_CLUES >= 2
+
+  step Use a rope on the level 1 elevator shaft
+    where  VAULTBUR:0
+    target tile 13904:0
+    done   GVAR_QUEST_VAULT15_1_SEARCH_FOR_CLUES >= 2
+    note   Bring a rope: one lies on the ground in Shady Sands
+    src    BVELV1W.ssl:43
+
+  step Use a rope on the level 2 elevator shaft
+    where  VAULTBUR:1
+    target tile 22702:1
+    done   GVAR_QUEST_VAULT15_1_SEARCH_FOR_CLUES >= 2
+    note   Second rope: in a locker on this level (hex 25099)
+    src    BVELV2E.ssl:40
+
+  step Search the collapsed area on level 3
+    where  VAULTBUR:2
+    target tile 23099:2,22701:2
+    done   GVAR_QUEST_VAULT15_1_SEARCH_FOR_CLUES >= 2
+    src    RUBCHIP.ssl:28
+
+quest vault15_chip
+  name   Search for a water chip
+  town   Vault 15
+  kind   optional
+  parent waterchip
+  giver  Arriving at Vault 15
+  pipboy 201
+  order  2
+
+  step Search the rubble by the control center
+    where  VAULTBUR:2
+    target tile 23099:2,22701:2
+    done   GVAR_QUEST_VAULT15_2_FIND_WATER_CHIP >= 2
+    note   The control center is buried: the chip has to come from elsewhere
+    src    RUBCHIP.ssl:29

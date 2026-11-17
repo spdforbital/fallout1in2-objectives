@@ -1,0 +1,69 @@
+Quest step files (data/steps/*.txt) -- authoring format
+=======================================================
+
+One file per town/area. Lines starting with '#' are comments. Blank lines ignored.
+Keywords start a line; indentation is optional (used for readability only).
+Names of constants are the ones from the Fo1in2 headers in
+vendor/fo1in2-src/Fallout2/Fallout1in2/Mapper/source/scripts/headers/
+(global.h GVAR_*, itempid.h / critpid.h / scenepid.h PID_*, scripts.h SCRIPT_*, maps.h MAP_*).
+Plain integers are allowed everywhere a constant is.
+
+quest <id>                 start a quest; id = lowercase_with_underscores, unique over all files
+  name   <text>            short title, <= 32 chars ("Rescue Tandi")
+  town   <text>            Vault 13 | Vault 15 | Shady Sands | Junktown | Raiders | Necropolis | Hub |
+                           Brotherhood | Military Base | Glow | Boneyard | Cathedral
+  kind   main|optional|companion   (companion: shown in the COMPANIONS section; in the panel
+                           only in its own town or when tracked)
+  pipboy <n>               QUESTS.msg line number if this is a Pip-Boy quest (quests.txt 2nd column)
+  active <cond>            quest is shown while this holds (default for pipboy quests: gvar >= display threshold)
+  done   <cond>            quest finished (default for pipboy quests: gvar >= completed threshold)
+  fail   <cond>            optional: quest failed / impossible
+  order  <n>               optional sort key inside the town (lower first)
+  giver  <text>            who/where gives the quest, <= 45 chars (shown while not started)
+  unlock <cond>            the quest can be obtained once this holds (default true); while false
+                           the Quests page shows it as "locked" with the lockhint
+  lockhint <text>          what is needed first, <= 45 chars ("After returning the water chip")
+  repeatable               (no value) a job that can be done again: not latched (see below)
+  parent <quest id>        the quest this one follows from; the Quests page shows it nested
+                           under the parent (any file, no cycles)
+
+  step <text>              imperative, <= 45 chars ("Talk to Seth at the gate")
+    where  <MAP[:elev]>,...    map(s) where it happens (maps.h names without MAP_, e.g. SHADYW or SHADYW:0).
+                               Omit if it can be done anywhere.
+    target <kind> <const>,...  what to point the distance/arrow at, on those maps:
+                               npc SCRIPT_X     critter whose script is SCRIPT_X (best for unique NPCs)
+                               critter PID_X    any critter with that proto
+                               item PID_X       item on the ground / in a container / carried by someone
+                               scenery PID_X    scenery object (door, terminal, ...)
+                               tile <n>[:elev]  a hex number
+                               Several targets: comma separated, all of the same kind.
+    done   <cond>              step is ticked off when this holds (required)
+    show   <cond>              optional: step only applies while this holds (alternative routes)
+    count  PID_X,PID_Y         optional: show how many living critters with these PIDs are on the map
+    note   <text>              optional longer hint for the Objectives tab, <= 70 chars
+    src    <file.ssl:line>     optional: where the done-condition is set (for reviewers)
+    alt                        this step is another way to do the step before it (talk OR kill,
+                               Speech OR pay ...). A run of alt steps forms one group: it is done
+                               when any member is done; the panel shows the others as "or: ...".
+
+Conditions:  atom [& atom ...] [| atom [& atom ...] ...]     (& binds tighter than |, no parentheses)
+  GVAR_NAME <op> <n>          op: == != >= <= > <      (n may be a number or a constant name)
+  item PID_X                  player carries at least one
+  item PID_X >= 3             player carries at least 3
+  noitem PID_X                player carries none
+  map MAP_X                   player is on that map
+  party PID_X                 that critter is in the player's party (noparty PID_X: is not)
+  town AREA_X <op> <n>        world map state of a location (maps.h AREA_*): 0 unknown,
+                              1 known (marked on the map), 2 visited
+  mvar MAP_X <idx> <op> <n>   map variable of MAP_X; only readable while on that map, the last
+                              value seen is remembered (use only when no GVAR exists)
+  true | false
+Do not use GVAR_MARK_* (they start at 1) or GVAR_WORLDMAPLIST_* (unused) for "found"
+steps; use town instead. tools/test_data.py fails if a step is already done on a new game.
+
+Steps are ordered: the panel shows the first steps that are not done yet. A later step that is
+already done counts as done even if earlier steps are not (sequence breaks are fine).
+
+Latching: once a quest or step is seen done, it stays done for that savegame (array
+"obj_done" in the save), even if its condition later stops holding (companion told to wait,
+a 'map' atom after leaving). Quests marked 'repeatable' are not latched.

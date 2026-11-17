@@ -1,0 +1,129 @@
+# Shady Sands (+ Radscorpion caves, Khans' camp)
+# Maps: SHADYW = west side (gate/Seth, Aradesh, Razlo, Jarvis, Tandi), SHADYE = east side (fields),
+# CAVES = radscorpion caves, RAIDERS = Khans' camp.
+# Not listed: the commented-out Pip-Boy entries 303 (Razlo's cure), 306 (crop yield) and
+# 307 (Seth vs. the Khans). Razlo and Curtis track these only in local vars (RAZLO.ssl
+# LVAR_Tail_EXP, CURTIS.ssl LVAR_Explained_Crop_Rotation); no GVAR exists for them.
+
+# GVAR_RADSCORPION_SEED: 1 = asked (ARADESH.ssl:687, SETH.ssl:175), 2 = done.
+quest ss_radscorpions
+  name   Stop the radscorpions
+  town   Shady Sands
+  kind   optional
+  giver  Aradesh or Seth in Shady Sands
+  pipboy 302
+  order  1
+
+# GVAR_SHADYSANDS_RADSCORPS_LEFT starts at 9 (Vault13.gam) and drops with every cave kill.
+  step Go to the radscorpion caves
+    where  SHADYW:0
+    target npc SCRIPT_SETH
+    done   GVAR_SHADYSANDS_RADSCORPS_LEFT < 9 | GVAR_RADSCORPION_SEED >= 2 | map MAP_CAVES
+    note   Seth at the town gate can lead you there
+    src    SSRADSCO.ssl:72
+
+# Also set by blowing up the cave wall: CAVEWALL.ssl:64.
+  step Kill the radscorpions in the caves
+    where  CAVES:0
+    target critter PID_RADSCORPION
+    count  PID_RADSCORPION
+    done   GVAR_RADSCORPIONS_KILLED == 1 | GVAR_RADSCORPION_SEED >= 2 & GVAR_RADSCORPIONS_KILLED != 2
+    src    SSRADSCO.ssl:77
+
+  step Blast the weak cave wall shut
+    alt
+    where  CAVES:0
+    target tile 21343:0
+    done   GVAR_RADSCORPIONS_KILLED == 2
+    note   Explosives; get out of the cave before it collapses
+    src    CAVEWALL.ssl:54
+
+quest ss_cure_jarvis
+  name   Cure Jarvis
+  town   Shady Sands
+  kind   optional
+  parent ss_radscorpions
+  giver  Jarvis (sick) in Shady Sands
+  pipboy 304
+  order  2
+
+  step Get a radscorpion tail
+    where  CAVES:0
+    target critter PID_RADSCORPION
+    done   item PID_SCORPION_TAIL | item PID_ANTIDOTE | GVAR_CURE_JARVIS >= 2
+    note   Every radscorpion killed in the caves drops a tail
+    src    SSRADSCO.ssl:69
+
+  step Have Razlo make an antidote
+    where  SHADYW:0
+    target npc SCRIPT_RAZLO
+    done   item PID_ANTIDOTE | GVAR_CURE_JARVIS >= 2
+    note   Razlo brews antidote from radscorpion tails
+    src    RAZLO.ssl:281
+
+  step Use the antidote on Jarvis
+    where  SHADYW:0
+    target npc SCRIPT_JARVIS
+    done   GVAR_CURE_JARVIS >= 2
+    src    JARVIS.ssl:125
+
+
+# Pip-Boy entry (1302) becomes 2 when you leave the camp with Tandi (RAIDMAP.ssl:76) or at
+# Aradesh's reward (ARADESH.ssl:833). This quest finishes when she is back home instead.
+# GVAR_TANDI_HIRELING_STATUS: 1 = kidnapped, 5 = freed/following, 2 = home, 3 = dead.
+# GVAR_TANDI_LOCATION_TRACKER: 2 = in the Khans' cell, 3 = following you, 300..303 and 4 = home.
+quest ss_rescue_tandi
+  name   Rescue Tandi
+  town   Shady Sands
+  kind   optional
+  lockhint Return a day after the radscorpions
+  parent ss_radscorpions
+  unlock GVAR_TANDI_HIRELING_STATUS == 1 | GVAR_TANDI_HIRELING_STATUS == 5 | GVAR_TANDI_QUEST_PIPBOY_ENTRY >= 1
+  giver  Aradesh or Seth after the kidnapping
+  pipboy 305
+  order  3
+  done   GVAR_TANDI_HIRELING_STATUS == 2 | GVAR_TANDI_LOCATION_TRACKER >= 4
+  fail   GVAR_TANDI_HIRELING_STATUS == 3 & GVAR_TANDI_LOCATION_TRACKER < 4 & GVAR_TANDI_QUEST_PIPBOY_ENTRY >= 1 | GVAR_TANDI_KIDNAPPED_DEAD >= 1
+
+  step Go to the Khans' camp
+    where  RAIDERS:0
+    target npc SCRIPT_TANDI
+    done   GVAR_TANDI_LOCATION_TRACKER >= 2 | GVAR_TANDI_HIRELING_STATUS == 2
+    note   Aradesh or Seth mark the camp on your map
+    src    TANDI.ssl:725
+
+# Freed (status 5) by buying her (GARL.ssl:212), Garl's honor fight (GARL.ssl:285, 227, 297)
+# or by opening the cell door (RAIDDOOR.ssl:58 -> TANDI.ssl:732).
+  step Buy Tandi from Garl
+    where  RAIDERS:0
+    target npc SCRIPT_GARL
+    done   GVAR_TANDI_HIRELING_STATUS == 5 | GVAR_TANDI_HIRELING_STATUS == 2 | GVAR_TANDI_LOCATION_TRACKER >= 3
+    src    GARL.ssl:212
+
+  step Beat Garl in an honor fight
+    alt
+    where  RAIDERS:0
+    target npc SCRIPT_GARL
+    done   GVAR_TANDI_HIRELING_STATUS == 5 | GVAR_TANDI_HIRELING_STATUS == 2 | GVAR_TANDI_LOCATION_TRACKER >= 3
+    src    GARL.ssl:285
+
+  step Open her cell
+    alt
+    where  RAIDERS:0
+    target tile 17905:0
+    done   GVAR_TANDI_HIRELING_STATUS == 5 | GVAR_TANDI_HIRELING_STATUS == 2 | GVAR_TANDI_LOCATION_TRACKER >= 3
+    note   Lockpick it, or kill the Khans
+    src    RAIDDOOR.ssl:58
+
+  step Leave the camp with Tandi
+    where  RAIDERS:0
+    done   GVAR_TANDI_QUEST_PIPBOY_ENTRY >= 2 | GVAR_TANDI_LOCATION_TRACKER >= 4
+    src    RAIDMAP.ssl:76
+
+# Tracker 300 is set in TANDI.ssl:763 once she is back in SHADYW.
+  step Bring Tandi home to Aradesh
+    where  SHADYW:0
+    target npc SCRIPT_ARADESH
+    done   GVAR_TANDI_HIRELING_STATUS == 2 | GVAR_TANDI_LOCATION_TRACKER >= 4
+    note   Aradesh pays 500 caps when you talk to him
+    src    SHADYWST.ssl:68

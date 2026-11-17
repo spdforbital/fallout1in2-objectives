@@ -1,0 +1,56 @@
+# Brotherhood of Steel quests (801 is covered by the Hub file)
+
+quest bos_become_initiate
+  name   Become an Initiate
+  town   Brotherhood
+  kind   optional
+  giver  Cabbot at the Brotherhood gate
+  pipboy 800
+  done   GVAR_QUEST_BROHOOD_1_JOIN_THEM == 2
+  fail   GVAR_QUEST_BROHOOD_1_JOIN_THEM == 5
+  order  10
+
+  step Talk to Cabbot at the Brotherhood gate
+    where  BROHDENT
+    target npc SCRIPT_CABBOT
+    done   GVAR_QUEST_BROHOOD_1_JOIN_THEM >= 1
+    note   Cabbot sends you on the quest into the Glow
+    src    CABBOT.ssl:319
+
+  step Show Cabbot a holodisk you already carry
+    alt
+    where  BROHDENT
+    target npc SCRIPT_CABBOT
+    done   GVAR_QUEST_BROHOOD_1_JOIN_THEM == 2
+    src    CABBOT.ssl:293
+
+  step Get the Brotherhood holodisk in the Glow
+    where  GLOW1
+    target item PID_BOS_HOLODISK
+    done   item PID_BOS_HOLODISK | GVAR_QUEST_BROHOOD_1_JOIN_THEM == 2
+    note   Inside a body/container on the upper Glow map (GLOW1, elevation 0)
+
+  step Bring the holodisk to Cabbot
+    where  BROHDENT
+    target npc SCRIPT_CABBOT
+    done   GVAR_QUEST_BROHOOD_1_JOIN_THEM == 2
+    src    CABBOT.ssl:606
+
+quest bos_scout_north
+  name   Scout the north
+  town   Brotherhood
+  kind   optional
+  lockhint Become a Brotherhood initiate first
+  parent bos_become_initiate
+  unlock GVAR_QUEST_BROHOOD_1_JOIN_THEM == 2
+  giver  Elder Maxson, Brotherhood
+  pipboy 811
+  order  20
+
+  # Completed on first entering the Military Base entrance map (or when
+  # Maxson hears your report). Reporting back to Maxson only sets a local var.
+  step Find what lies north of the Brotherhood
+    where  MBENT
+    done   map MAP_MBENT | GVAR_SCOUTED_NORTH_BRO >= 2
+    note   Maxson wants the area north scouted: the Military Base
+    src    MBENT.ssl:32
