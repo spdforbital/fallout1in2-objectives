@@ -8,7 +8,6 @@ GVAR_JEREMIAH_STATUS          # death flag
 GVAR_JEREMIAH_TRICKED         # disguise bluff in dialogue
 GVAR_SETH_STATUS              # met/dead flag
 GVAR_ARADESH_STATUS           # met/dead flag
-GVAR_GARLS_FRIEND             # befriending the Khans in dialogue (XP), not a task
 GVAR_MISTAKEN_ID              # raiders think you are Garl's father (random)
 GVAR_QUEST_DEMO_FIX_POWER     # Scrapheap demo ends before it can be done
 GVAR_FOLLOWER_MACHO_HELP      # part of cathedral_contact_laura

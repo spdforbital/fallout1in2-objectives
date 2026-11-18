@@ -1,0 +1,49 @@
+# Khans' camp (RAIDERS:0). Pip-Boy entries 500-509 are commented out in quests.txt (gvar 9999),
+# but two of them can be tracked through other GVARs.
+#
+# Slave women (WOMEN.ssl critter_p_proc): each gives EXP_RESCUE_SLAVE once
+#   (Garl dead and <= 8 Khans alive) or <= 4 Khans alive.
+#   GVAR_TOTAL_RAIDERS starts at 19 (VAULT13.GAM) and drops in every raider's destroy_p_proc;
+#   GVAR_GARL_DEAD is set in GARL.ssl:279 (also when he dies in the honor fight).
+# Joining the Khans (GARL.ssl garl35 -> garl37 -> garl37a): Garl asks you to kill two slave women
+#   within 15 seconds; garl40 then gives EXP_BEFRIEND_KHANS and sets GVAR_GARLS_FRIEND = 1.
+#   Turning on the Khans later resets it to 0 (latching keeps the quest done).
+# Jack the prisoner (RAIDPRIS.ssl) is cut content (fo1in2_cut_characters_enabled) and only
+#   appears when Tandi is not on the map; his XP is a local var, so he is left out.
+
+quest khans_free_slaves
+  name   Free the Khans' slaves
+  town   Raiders
+  kind   optional
+  giver  The slave women in the Khans' camp
+  unlock town AREA_RAIDERS >= 1
+  lockhint Find the Khans' camp (Tandi is taken there)
+  order  10
+  active town AREA_RAIDERS >= 2
+  done   GVAR_GARL_DEAD >= 1 & GVAR_TOTAL_RAIDERS <= 8 | GVAR_TOTAL_RAIDERS <= 4
+
+  step Kill Garl and break the Khans
+    where  RAIDERS:0
+    target npc SCRIPT_GARL
+    done   GVAR_GARL_DEAD >= 1 & GVAR_TOTAL_RAIDERS <= 8 | GVAR_TOTAL_RAIDERS <= 4
+    note   Garl plus all but 8 Khans dead, or all but 4. Slaves give XP each
+    src    WOMEN.ssl:52
+
+quest khans_join
+  name   Win Garl's trust
+  town   Raiders
+  kind   optional
+  giver  Garl, leader of the Khans
+  unlock town AREA_RAIDERS >= 1
+  lockhint Find the Khans' camp (Tandi is taken there)
+  order  20
+  active town AREA_RAIDERS >= 2
+  done   GVAR_GARLS_FRIEND >= 1
+  fail   GVAR_GARL_DEAD >= 1 & GVAR_GARLS_FRIEND == 0
+
+  step Ask Garl to let you join the Khans
+    where  RAIDERS:0
+    target npc SCRIPT_GARL
+    done   GVAR_GARLS_FRIEND >= 1
+    note   Evil: he wants two slave women dead in 15 s. Loses Karma
+    src    GARL.ssl:731

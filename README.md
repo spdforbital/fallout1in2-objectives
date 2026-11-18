@@ -25,9 +25,9 @@ installed as its own removable mod.
   2. *Gear*: better weapons/armor on the current map, nearest first, and where they are.
   3. *Settings*: everything in `objectives.ini`, changeable in game.
 - **Companions**: recruit quests for Ian, Dogmeat, Tycho, Katja, Mr. Handy and the eyebot.
-- 58 quests: the 3 main quests, 6 companions and 49 optional quests - the Pip-Boy ones plus
+- 60 quests: the 3 main quests, 6 companions and 51 optional quests - the Pip-Boy ones plus
   jobs the Pip-Boy doesn't list (caravan guards, Decker, the Thieves' Circle, Scrapheap,
-  Kyle's power armor, Sophia's grenades, the Elders' support, Iguana Bob, ...). Steps were checked against the Fo1in2 script sources; each step
+  Kyle's power armor, Sophia's grenades, the Elders' support, Iguana Bob, the Khans' slaves, joining the Khans, ...). Steps were checked against the Fo1in2 script sources; each step
   names the script line that sets it (`src` in the data files).
 - Done steps stay done for that savegame (stored in the save), except repeatable jobs.
 
